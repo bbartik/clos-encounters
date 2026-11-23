@@ -23,15 +23,34 @@ h1,h2,.big{font-family:"Space Grotesk",Inter,sans-serif;letter-spacing:-.02em;li
 h1{font-size:clamp(32px,5vw,48px);margin:0;font-weight:700}
 h2{font-size:24px;margin:0 0 12px;font-weight:700}
 .band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
-.wrap{max-width:1240px;margin:0 auto}
+.wrap{max-width:1600px;margin:0 auto}
 .head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:20px}
 .head p{margin:0;color:var(--mute);max-width:60ch}
 .headR{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:flex-end}
 .seg.theme{flex:none}
 .seg.theme button{flex:none;min-height:38px;padding:0 12px;font-size:14px}
-.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;grid-template-areas:"ctl out";align-items:start}
-.ctl{grid-area:ctl}.out{grid-area:out}
-@media(min-width:861px){.out{position:sticky;top:12px}}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;grid-template-areas:"ctl out" "ctl mod";grid-template-rows:auto 1fr;align-items:start}
+.ctl{grid-area:ctl}.out{grid-area:out}.mod{grid-area:mod}
+@media(min-width:1320px){.grid{grid-template-columns:minmax(0,350px) minmax(0,1fr) minmax(0,380px);grid-template-areas:"ctl out mod";grid-template-rows:auto}.out,.mod{position:sticky;top:12px}.mod{max-height:calc(100vh - 24px);overflow-y:auto}}
+.mod h2{margin-bottom:6px}
+.need{font-size:14px;color:var(--mute);margin:0 0 10px}
+.need b{color:var(--ink);font-weight:600;white-space:nowrap}
+.mtabs{margin-bottom:10px}
+.vend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.mlist{list-style:none;margin:0;padding:0}
+.mitem{border-top:1px solid var(--line);padding:10px 0}
+.mtop{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.vtag{font:600 12px Inter,sans-serif;padding:2px 7px;border-radius:4px;color:#fff;flex:none}
+.vtag.Arista{background:#0a5cb8}.vtag.Cisco{background:#00798c}.vtag.Juniper{background:#3e8635}
+.mitem a{font:700 16px "Space Grotesk",sans-serif;color:var(--ink);text-decoration-color:var(--pink);text-underline-offset:3px;overflow-wrap:anywhere}
+.mitem a:hover{color:var(--pink)}
+.mspec{font-size:14px;color:var(--mute);margin:2px 0 4px}
+.fit{display:inline-block;font:600 13px Inter,sans-serif;padding:2px 8px;border-radius:12px;margin-right:6px}
+.fit.l0{background:var(--pink);color:#fff}
+.fit.l1{background:color-mix(in srgb,var(--teal) 18%,transparent);color:var(--ink)}
+.fit.l2,.fit.l3{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--ink)}
+.stat-new{font-size:12px;font-weight:600;color:var(--amber)}
+.mempty{font-size:14px;color:var(--mute);border-top:1px solid var(--line);padding-top:10px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .chip{font:500 13px Inter,sans-serif;min-height:36px;padding:6px 10px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
@@ -76,7 +95,7 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .foot{font-size:13px;color:var(--mute);margin-top:16px}
 .only3{display:none}
 .t3 .only3{display:block}
-@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"out" "ctl"}.lower{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"out" "ctl" "mod";grid-template-rows:auto}.lower{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.fig{min-height:300px}.res{grid-template-columns:minmax(0,1fr)}.res .sub{padding:0}table{font-size:13px}th,td{padding:6px 4px}}
 @media(prefers-reduced-motion:no-preference){.trace{stroke-dasharray:6 6;animation:flow 1.2s linear infinite}@keyframes flow{to{stroke-dashoffset:-24}}}
 </style>
@@ -163,6 +182,15 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
       <div class="stats" id="stats"></div>
       <ul class="warn" id="warn"></ul>
       <div class="acts"><button class="btn" id="copy" type="button">Copy summary</button><button class="btn ghost" id="reset" type="button">Reset</button></div>
+    </section>
+
+    <section class="mod card" aria-label="Matching models">
+      <h2>Matching models</h2>
+      <div class="seg mtabs" id="roles"></div>
+      <p class="need" id="need"></p>
+      <div class="vend" id="vend"></div>
+      <ul class="mlist" id="mlist"></ul>
+      <p class="foot">Fixed-configuration switches from Arista, Cisco and Juniper, checked November 2026. Matches are on physical ports and native speed. Confirm breakout modes, optics and software support on the datasheet.</p>
     </section>
   </div>
 
@@ -267,6 +295,79 @@ function fmtG(g){return g>=1000?fmtR(g/1000)+"T":g+"G"}
 function bw(g){return g>=1e6?fmtR(g/1e6)+" Pbps":fmtR(g/1e3)+" Tbps"}
 /*ENDCALC*/
 
+/*MATCH*/
+const A="https://www.arista.com/assets/data/pdf/Datasheets/";
+const CN="https://www.cisco.com/c/en/us/products/collateral/switches/nexus-9000-series-switches/";
+const JN="https://www.juniper.net/us/en/products/switches/qfx-series/";
+const CATALOG=[
+ {v:"Arista",m:"7060XE7-64PS",g:[[64,1600]],cap:102.4,chip:"Tomahawk 6",f:"OSFP",st:"Shipping Q4 2026",u:A+"7060XE7-Datasheet.pdf"},
+ {v:"Arista",m:"7060XE7-128PE",g:[[128,800]],cap:102.4,chip:"Tomahawk 6",f:"OSFP",st:"Early 2027",u:A+"7060XE7-Datasheet.pdf"},
+ {v:"Arista",m:"7060X6-64PE",g:[[64,800]],cap:51.2,chip:"Tomahawk 5",f:"OSFP",u:A+"7060X6-Datasheet.pdf"},
+ {v:"Arista",m:"7060X6-32PE",g:[[32,800]],cap:25.6,chip:"Tomahawk 5",f:"OSFP",u:A+"7060X6-Datasheet.pdf"},
+ {v:"Arista",m:"7060PX5-64E",g:[[32,800]],cap:25.6,chip:"Tomahawk 4",f:"OSFP",u:A+"7060X5-Datasheet.pdf"},
+ {v:"Arista",m:"7060DX5-64S",g:[[64,400]],cap:25.6,chip:"Tomahawk 4",f:"QSFP-DD",u:A+"7060X5-Datasheet.pdf"},
+ {v:"Arista",m:"7060DX5-32",g:[[32,400]],cap:12.8,chip:"Tomahawk 4",f:"QSFP-DD",u:A+"7060X5-Datasheet.pdf"},
+ {v:"Arista",m:"7060CX5-56D8",g:[[56,100],[8,400]],cap:8.8,chip:"Tomahawk 4",f:"QSFP-DD",u:A+"7060X5-Datasheet.pdf"},
+ {v:"Arista",m:"7050DX4-32S",g:[[32,400]],cap:12.8,chip:"Trident 4",f:"QSFP-DD",u:A+"7050X4-Datasheet.pdf"},
+ {v:"Arista",m:"7050CX4M-48D8",g:[[48,100],[8,400]],cap:8,chip:"Trident 4",f:"QSFP28 + QSFP-DD",u:A+"7050X4-Datasheet.pdf"},
+ {v:"Arista",m:"7050SDX4-48D8",g:[[48,100],[8,400]],cap:8,chip:"Trident 4",f:"SFP-DD + QSFP-DD",u:A+"7050X4-Datasheet.pdf"},
+ {v:"Arista",m:"7050SX3-48YC12",g:[[48,25],[12,100]],cap:2.4,chip:"Trident 3",f:"SFP28 + QSFP28",u:"https://www.arista.com/en/products/7050x3-series-network-switch-datasheet"},
+ {v:"Arista",m:"7050SX3-48YC8",g:[[48,25],[8,100]],cap:2,chip:"Trident 3",f:"SFP28 + QSFP28",u:"https://www.arista.com/en/products/7050x3-series-network-switch-datasheet"},
+ {v:"Cisco",m:"N9164F-NS6",g:[[64,1600]],cap:102.4,chip:"NVIDIA Spectrum-6",f:"OSFP",st:"Orderable end of 2026",u:CN+"n9164e-ns4-o-switch-faq.html"},
+ {v:"Cisco",m:"N9364E-SG2",g:[[64,800]],cap:51.2,chip:"Silicon One G200",f:"OSFP or QSFP-DD",u:CN+"nexus-9364e-sg2-switch-ds.html"},
+ {v:"Cisco",m:"N9364E-SG2X",g:[[64,800]],cap:51.2,chip:"Silicon One G200, LPO",f:"OSFP or QSFP-DD",u:"https://www.cisco.com/c/en/us/products/collateral/networking/cloud-networking-switches/nexus-9000-switches/n9364e-sg2x-switches-ds.html"},
+ {v:"Cisco",m:"N9364E-SP2R",g:[[64,800]],cap:51.2,chip:"Silicon One P200, deep buffer",f:"OSFP or QSFP-DD",u:CN+"nexus-9364e-sp2r-switches-ds.html"},
+ {v:"Cisco",m:"N9164E-NS4-O",g:[[64,800]],cap:51.2,chip:"NVIDIA Spectrum-4",f:"OSFP",u:CN+"n9164e-ns4-o-switch-ds.html"},
+ {v:"Cisco",m:"N9364D-GX2A",g:[[64,400]],cap:25.6,chip:"Cloud Scale GX2",f:"QSFP-DD",u:CN+"datasheet-c78-743854.html"},
+ {v:"Cisco",m:"N9348D-GX2A",g:[[48,400]],cap:19.2,chip:"Cloud Scale GX2",f:"QSFP-DD",u:CN+"datasheet-c78-743854.html"},
+ {v:"Cisco",m:"N9332D-GX2B",g:[[32,400]],cap:12.8,chip:"Cloud Scale GX2",f:"QSFP-DD",u:CN+"datasheet-c78-743854.html"},
+ {v:"Cisco",m:"N9316D-GX",g:[[16,400]],cap:6.4,chip:"Cloud Scale GX",f:"QSFP-DD",u:CN+"nexus-9300-gx-series-switches-ds.html"},
+ {v:"Cisco",m:"N93600CD-GX",g:[[28,100],[8,400]],cap:6,chip:"Cloud Scale GX",f:"QSFP28 + QSFP-DD",u:CN+"nexus-9300-gx-series-switches-ds.html"},
+ {v:"Cisco",m:"N9348Y2C6D-SE1U",g:[[48,25],[6,400],[2,100]],cap:4.8,chip:"Silicon One E100 + DPU",f:"SFP28 + QSFP-DD",u:"https://www.cisco.com/c/en/us/products/collateral/switches/9300-series-smart-switches/n9300-series-smart-switch-ds.html"},
+ {v:"Cisco",m:"N93180YC-FX3",g:[[48,25],[6,100]],cap:1.8,chip:"Cloud Scale FX3",f:"SFP28 + QSFP28",u:CN+"datasheet-c78-2410307.html"},
+ {v:"Juniper",m:"QFX5250-64OE-L",g:[[64,1600]],cap:102.4,chip:"Tomahawk 6, liquid-cooled",f:"OSFP",u:"https://www.juniper.net/documentation/us/en/hardware/qfx5250/topics/concept/overview.html"},
+ {v:"Juniper",m:"QFX5240-64OD / 64QD",g:[[64,800]],cap:51.2,chip:"Tomahawk 5",f:"OSFP or QSFP-DD",u:JN+"qfx5240-switches-datasheet.html"},
+ {v:"Juniper",m:"QFX5241-32OD",g:[[32,800]],cap:25.6,chip:"Tomahawk 5",f:"OSFP",u:JN+"qfx5240-data-center-switches/specs.html"},
+ {v:"Juniper",m:"QFX5230-64CD",g:[[64,400]],cap:25.6,chip:"Tomahawk 4",f:"QSFP56-DD",u:JN+"qfx5230-64cd-switch-datasheet.html"},
+ {v:"Juniper",m:"QFX5130-32CD",g:[[32,400]],cap:12.8,chip:"Trident 4",f:"QSFP-DD",u:JN+"qfx5130-line-of-switches-datasheet.html"},
+ {v:"Juniper",m:"QFX5130-48C",g:[[48,100],[8,400]],cap:8,chip:"Trident 4",f:"SFP56-DD + QSFP-DD",u:JN+"qfx5130-line-of-switches-datasheet.html"},
+ {v:"Juniper",m:"QFX5120-48Y",g:[[48,25],[8,100]],cap:2,chip:"Trident 3",f:"SFP28 + QSFP28",u:"https://www.juniper.net/gb/en/products/switches/qfx-series/qfx5120-ethernet-switch-datasheet.html"}
+];
+// req: [[ports,speed],...] -> null or {lvl,spare,down,brk}
+function fitPass(g,req,allowBrk){
+  const av=g.map(([n,s])=>({n,s}));let down=false,brk=false;
+  for(const [n,s] of [...req].sort((a,b)=>b[1]-a[1])){
+    let need=n;
+    for(const a of av)if(a.s===s){const t=Math.min(need,a.n);a.n-=t;need-=t}
+    for(const a of av.filter(a=>a.s>s).sort((x,y)=>x.s-y.s)){
+      if(need<=0)break;
+      const r=a.s/s;
+      if(allowBrk&&Number.isInteger(r)&&r<=8){const p=Math.min(a.n,Math.ceil(need/r));if(p>0){a.n-=p;need-=p*r;brk=true}}
+      else{const t=Math.min(need,a.n);if(t>0){a.n-=t;need-=t;down=true}}
+    }
+    if(need>0)return null;
+  }
+  return {down,brk,spare:av.reduce((t,a)=>t+a.n,0)};
+}
+function matchModel(m,req){
+  let r=fitPass(m.g,req,false), b=false;
+  if(!r){r=fitPass(m.g,req,true);b=true}
+  if(!r)return null;
+  const lvl=b?3:r.down?2:r.spare===0?0:1;
+  return {lvl,spare:r.spare};
+}
+function reqFor(role,c){
+  const merge=a=>{const o={};a.forEach(([n,s])=>o[s]=(o[s]||0)+n);return Object.entries(o).map(([s,n])=>[n,+s])};
+  if(role==="leaf")return merge([[c.ldp,c.lds],[c.lup,c.lus]]);
+  if(role==="spine")return merge(c.t===3?[[c.sdp,c.sds],[c.sup,c.sus]]:[[c.sdp,c.sds]]);
+  return [[c.xp,c.xs]];
+}
+function matches(role,c){
+  const req=reqFor(role,c);
+  return CATALOG.map(m=>({m,r:matchModel(m,req)})).filter(x=>x.r).sort((a,b)=>a.r.lvl-b.r.lvl||a.r.spare-b.r.spare||a.m.cap-b.m.cap);
+}
+/*ENDMATCH*/
+
 const $=id=>document.getElementById(id);
 const opt=(el,arr,f)=>{el.innerHTML=arr.map(v=>`<option value="${v}">${f(v)}</option>`).join("")};
 ["lds","lus","sds","sus","xs"].forEach(id=>opt($(id),SPEEDS,v=>v+"G"));
@@ -306,8 +407,35 @@ function render(){
   ];
   $("stats").innerHTML=st.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join("");
   $("warn").innerHTML=R.w.map(x=>`<li>${x}</li>`).join("");
-  mathList(); bom(); draw();
+  mathList(); bom(); models(); draw();
 }
+
+let role="leaf", vend="All";
+const FIT=["Exact fit","Fits","Fits at lower port speed","Fits via breakout"];
+function models(){
+  if(S.t===2&&role==="super")role="leaf";
+  const roles=[["leaf","Leaf"],["spine","Spine"],...(S.t===3?[["super","Super-spine"]]:[])];
+  $("roles").innerHTML=roles.map(([k,l])=>`<button type="button" data-r="${k}" class="${k===role?"on":""}">${l}</button>`).join("");
+  const req=reqFor(role,S);
+  $("need").innerHTML=`Needs <b>${req.map(([n,s])=>`${n}×${fmtG(s)}`).join(" + ")}</b> physical ports (${fmtG(req.reduce((t,[n,s])=>t+n*s,0))})`;
+  const all=matches(role,S);
+  const counts={All:all.length};all.forEach(x=>counts[x.m.v]=(counts[x.m.v]||0)+1);
+  $("vend").innerHTML=["All","Arista","Cisco","Juniper"].map(v=>`<button type="button" class="chip${v===vend?" on":""}" data-v="${v}">${v} (${counts[v]||0})</button>`).join("");
+  const list=all.filter(x=>vend==="All"||x.m.v===vend);
+  if(!list.length){
+    $("mlist").innerHTML=`<li class="mempty">No fixed switch in the catalog has these ports${vend!=="All"?" from "+vend:""}. Try a breakout or a different split, or look at modular chassis (Arista 7800R4, Cisco N9800, Juniper QFX5700/PTX).</li>`;
+    return;
+  }
+  $("mlist").innerHTML=list.map(({m,r})=>{
+    const ports=m.g.map(([n,s])=>`${n}×${fmtG(s)}`).join(" + ");
+    const fit=FIT[r.lvl]+(r.lvl===1||r.lvl===2?(r.spare?` · ${r.spare} ports spare`:""):"");
+    return `<li class="mitem"><div class="mtop"><span class="vtag ${m.v}">${m.v}</span><a href="${m.u}" target="_blank" rel="noopener">${m.m}</a>${m.st?`<span class="stat-new">${m.st}</span>`:""}</div>
+      <div class="mspec">${ports} ${m.f} · ${fmtR(m.cap)}T · ${m.chip}</div>
+      <span class="fit l${r.lvl}">${fit}</span></li>`;
+  }).join("");
+}
+$("roles").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;role=b.dataset.r;models()});
+$("vend").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;vend=b.dataset.v;models()});
 
 function mathList(){
   const L=[
