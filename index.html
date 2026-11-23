@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clos Encounters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: an engineer's sizing tool, dense and exact
+   IDEA a fabric planning sheet: the Clos drawn live beside the port math
+   PICTURE live topology (leaf/spine/super-spine, planes coloured) under a big host-port figure
+   COLOUR ice ground, deep ink, hot pink for the traced path and the answer
+   TYPE Space Grotesk 500/700 + Inter
+   LAYOUT laptop: controls left, result + topology right, worked math below; phone: title, result+picture, controls */
+:root{color-scheme:light dark;--bg:light-dark(#dff1f7,#06222e);--ink:light-dark(#06222e,#dff1f7);--panel:light-dark(#f5fbfd,#0b3242);--line:light-dark(#9cc6d4,#1f5568);--mute:light-dark(#3d5d6a,#9ec2cf);--pink:#ff2e7e;--teal:light-dark(#0a7fa0,#3cc3e6);--amber:#e09a00;--green:light-dark(#0b8a50,#2fd08a)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,.big{font-family:"Space Grotesk",Inter,sans-serif;letter-spacing:-.02em;line-height:1.05}
+h1{font-size:clamp(32px,5vw,48px);margin:0;font-weight:700}
+h2{font-size:24px;margin:0 0 12px;font-weight:700}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+.head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:20px}
+.head p{margin:0;color:var(--mute);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;grid-template-areas:"ctl out";align-items:start}
+.ctl{grid-area:ctl}.out{grid-area:out}
+@media(min-width:861px){.out{position:sticky;top:12px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{font:500 13px Inter,sans-serif;min-height:36px;padding:6px 10px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.chip:hover{border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+fieldset{border:0;border-top:1px solid var(--line);margin:0;padding:12px 0 6px}
+legend{font:700 15px "Space Grotesk",sans-serif;padding:0 6px 0 0}
+.grp{font-size:13px;font-weight:600;margin:10px 0 2px}
+.row3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;font:16px Inter,sans-serif;min-height:44px;padding:8px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;min-height:44px;border:0;background:transparent;color:var(--ink);font:600 15px Inter,sans-serif;cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.hint{font-size:13px;color:var(--mute);margin:6px 0 0}
+.hint b{color:var(--ink);font-weight:600}
+.res{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 20px;align-items:end;margin-bottom:12px}
+.big{font-size:clamp(44px,7vw,76px);font-weight:700;color:var(--pink);white-space:nowrap}
+.res .sub{font-size:17px;padding-bottom:8px}
+.res .sub b{font-weight:600}
+.fig{position:relative;min-height:360px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font:500 13px Inter,sans-serif;fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5em,1fr));gap:12px 16px;margin-top:14px}
+.stat span{display:block;font-size:13px;color:var(--mute)}
+.stat b{font:700 22px "Space Grotesk",sans-serif;white-space:nowrap}
+.warn{margin:12px 0 0;padding:0;list-style:none}
+.warn li{border-left:4px solid var(--pink);padding:6px 10px;margin-top:6px;background:color-mix(in srgb,var(--pink) 10%,transparent);font-size:14px}
+.lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-top:20px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--mute);font-weight:500}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.math li{margin:6px 0}
+.math code{font:500 14px "Space Grotesk",sans-serif;background:color-mix(in srgb,var(--ink) 8%,transparent);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.math ol{padding-left:20px;margin:0}
+.btn{min-height:44px;padding:8px 16px;border-radius:8px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:600 15px Inter,sans-serif;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.foot{font-size:13px;color:var(--mute);margin-top:16px}
+.only3{display:none}
+.t3 .only3{display:block}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"out" "ctl"}.lower{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.fig{min-height:300px}.res{grid-template-columns:minmax(0,1fr)}.res .sub{padding:0}table{font-size:13px}th,td{padding:6px 4px}}
+@media(prefers-reduced-motion:no-preference){.trace{stroke-dasharray:6 6;animation:flow 1.2s linear infinite}@keyframes flow{to{stroke-dashoffset:-24}}}
+</style>
+</head>
+<body>
+<div class="band"><div class="wrap">
+  <div class="head">
+    <h1>Clos Encounters</h1>
+    <p>Leaf/spine and 3-tier fabric sizing: port groups and link speeds per layer, switch counts, links and optics, with the fabric drawn live.</p>
+  </div>
+
+  <div class="grid" id="root">
+    <section class="ctl card" aria-label="Inputs">
+      <div class="chips" id="presets"></div>
+
+      <fieldset><legend>Topology</legend>
+        <div class="seg" id="tiers"><button type="button" data-t="2">2-tier</button><button type="button" data-t="3">3-tier (super-spine)</button></div>
+      </fieldset>
+
+      <fieldset><legend>Leaf switch</legend>
+        <div class="grp">Down to hosts</div>
+        <div class="row3">
+          <div><label for="ldp">Ports</label><input id="ldp" type="number" min="1" max="512"></div>
+          <div><label for="lds">Speed</label><select id="lds"></select></div>
+          <div><label for="lbh">Breakout</label><select id="lbh"></select></div>
+        </div>
+        <div class="grp">Up to spines</div>
+        <div class="row3">
+          <div><label for="lup">Ports</label><input id="lup" type="number" min="1" max="512"></div>
+          <div><label for="lus">Speed</label><select id="lus"></select></div>
+          <div><label for="lbu">Breakout</label><select id="lbu"></select></div>
+        </div>
+        <p class="hint" id="leafBox"></p>
+      </fieldset>
+
+      <fieldset><legend>Spine switch</legend>
+        <div class="grp">Down to leafs</div>
+        <div class="row3">
+          <div><label for="sdp">Ports</label><input id="sdp" type="number" min="1" max="512"></div>
+          <div><label for="sds">Speed</label><select id="sds"></select></div>
+          <div><label for="sbd">Breakout</label><select id="sbd"></select></div>
+        </div>
+        <div class="only3">
+          <div class="grp">Up to super-spines</div>
+          <div class="row3">
+            <div><label for="sup">Ports</label><input id="sup" type="number" min="1" max="512"></div>
+            <div><label for="sus">Speed</label><select id="sus"></select></div>
+            <div><label for="sbu">Breakout</label><select id="sbu"></select></div>
+          </div>
+        </div>
+        <div class="row">
+          <div><label for="par">Links per leaf–spine pair</label><select id="par"></select></div>
+          <div></div>
+        </div>
+        <p class="hint" id="spineBox"></p>
+      </fieldset>
+
+      <fieldset class="only3"><legend>Super-spine switch</legend>
+        <div class="row3">
+          <div><label for="xp">Ports</label><input id="xp" type="number" min="1" max="512"></div>
+          <div><label for="xs">Speed</label><select id="xs"></select></div>
+          <div><label for="xb">Breakout</label><select id="xb"></select></div>
+        </div>
+        <p class="hint">All ports face spines. One port per pod.</p>
+      </fieldset>
+
+      <fieldset><legend>Build</legend>
+        <div class="row">
+          <div><label for="nic">NICs per server</label><input id="nic" type="number" min="1" max="16"></div>
+          <div><label for="tgt">Target host ports</label><input id="tgt" type="number" min="0" placeholder="optional"></div>
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="out card" aria-live="polite">
+      <div class="res">
+        <div class="big" id="bigN"></div>
+        <div class="sub" id="bigSub"></div>
+      </div>
+      <div class="fig"><svg id="topo" role="img" aria-label="Fabric topology diagram"></svg></div>
+      <div class="stats" id="stats"></div>
+      <ul class="warn" id="warn"></ul>
+      <div class="acts"><button class="btn" id="copy" type="button">Copy summary</button><button class="btn ghost" id="reset" type="button">Reset</button></div>
+    </section>
+  </div>
+
+  <div class="lower">
+    <section class="card math"><h2>Worked math</h2><ol id="math"></ol></section>
+    <section class="card"><h2>Bill of materials</h2>
+      <div style="overflow-x:auto"><table><thead><tr><th>Item</th><th class="n">Max scale</th><th class="n" id="bomT">Target</th></tr></thead><tbody id="bom"></tbody></table></div>
+      <p class="foot">Optics count switch-side cages populated, with every leaf port filled. A breakout optic is one transceiver feeding several cable runs. Host cables are counted per NIC.</p>
+    </section>
+  </div>
+</div></div>
+
+<script>
+{
+const SPEEDS=[10,25,50,100,200,400,800,1600];
+const BK=[1,2,4,8];
+const PAR=[1,2,4];
+const base={t:2,par:1,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1};
+const P=(n,c)=>({n,c:{...base,...c}});
+const PRESETS=[
+ P("12.8T · 32×400G",{ldp:16,lds:400,lbh:1,lup:16,lus:400,lbu:1,sdp:32,sds:400,sbd:1}),
+ P("25.6T · 64×400G",{ldp:32,lds:400,lbh:1,lup:32,lus:400,lbu:1,sdp:64,sds:400,sbd:1}),
+ P("25.6T · 32×800G",{ldp:16,lds:800,lbh:1,lup:16,lus:800,lbu:1,sdp:32,sds:800,sbd:1}),
+ P("32×800G, uplinks 2×400G",{ldp:16,lds:800,lbh:1,lup:16,lus:800,lbu:2,sdp:32,sds:800,sbd:2}),
+ P("51.2T · 64×800G",{ldp:32,lds:800,lbh:1,lup:32,lus:800,lbu:1,sdp:64,sds:800,sbd:1}),
+ P("64×800G, uplinks 2×400G",{ldp:32,lds:800,lbh:1,lup:32,lus:800,lbu:2,sdp:64,sds:800,sbd:2}),
+ P("102.4T · 128×800G",{ldp:64,lds:800,lbh:1,lup:64,lus:800,lbu:1,sdp:128,sds:800,sbd:1}),
+ P("Front-end 48×100G + 8×400G",{ldp:48,lds:100,lbh:1,lup:8,lus:400,lbu:1,sdp:32,sds:400,sbd:1}),
+ P("Front-end 32×400G + 8×800G",{ldp:32,lds:400,lbh:1,lup:8,lus:800,lbu:1,sdp:64,sds:800,sbd:1}),
+ P("Fat-tree k=32 (3-tier)",{t:3,ldp:16,lds:400,lbh:1,lup:16,lus:400,lbu:1,sdp:16,sds:400,sbd:1,sup:16,sus:400,sbu:1,xp:32,xs:400,xb:1}),
+ P("3-tier, 400G edge / 800G core",{t:3,ldp:32,lds:400,lbh:1,lup:32,lus:400,lbu:1,sdp:32,sds:800,sbd:2,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1})
+];
+const DEF={...PRESETS[3].c,nic:8,tgt:768};
+const KEYS=["ldp","lds","lbh","lup","lus","lbu","sdp","sds","sbd","sup","sus","sbu","xp","xs","xb","par","nic"];
+
+/*CALC*/
+function calc(c){
+  const w=[], t3=c.t===3;
+  const hostSpeed=c.lds/c.lbh, upSpeed=c.lus/c.lbu, spDSpeed=c.sds/c.sbd;
+  const hpl=c.ldp*c.lbh, upL=c.lup*c.lbu, spDL=c.sdp*c.sbd, p=c.par;
+  const downBW=c.ldp*c.lds, upBW=c.lup*c.lus;
+  const os=downBW/upBW;
+  if(upSpeed!==spDSpeed) w.push(`Leaf–spine speed mismatch: leaf uplinks run ${upSpeed}G, spine downlinks run ${spDSpeed}G. Change a breakout or speed so both ends match.`);
+  if(upL%p) w.push(`${upL} leaf uplinks don't divide evenly by ${p} links per spine.`);
+  if([hostSpeed,upSpeed,spDSpeed].some(s=>s<10)) w.push("A breakout below 10G per port isn't realistic.");
+  const spg=Math.floor(upL/p);
+  const r={t:c.t,w,hostSpeed,upSpeed,spDSpeed,hpl,upL,spDL,p,os,spg,downBW,upBW};
+  r.leafCap=downBW+upBW;
+  r.spineCap=c.sdp*c.sds+(t3?c.sup*c.sus:0);
+  if(!t3){
+    r.leafs=Math.floor(spDL/p); r.spines=spg; r.supers=0;
+    r.lsLinks=r.leafs*upL; r.ssLinks=0;
+    r.spineCages=r.spines*Math.ceil(r.leafs*p/c.sbd); r.superCages=0;
+  }else{
+    const spUSpeed=c.sus/c.sbu, spUL=c.sup*c.sbu, xSpeed=c.xs/c.xb, xL=c.xp*c.xb;
+    if(spUSpeed!==xSpeed) w.push(`Spine–super-spine speed mismatch: spine uplinks run ${spUSpeed}G, super-spine ports run ${xSpeed}G.`);
+    if(xSpeed<10||spUSpeed<10) w.push("A breakout below 10G per port isn't realistic.");
+    Object.assign(r,{spUSpeed,spUL,xSpeed,xL});
+    r.lpp=Math.floor(spDL/p); r.spp=spg; r.planes=spg; r.spPlane=spUL; r.pods=xL;
+    r.leafs=r.pods*r.lpp; r.spines=r.pods*r.spp; r.supers=r.planes*r.spPlane;
+    r.lsLinks=r.leafs*upL; r.ssLinks=r.spines*spUL;
+    r.taper=(r.lpp*p*spDSpeed)/(spUL*spUSpeed);
+    r.spineCages=r.spines*(Math.ceil(r.lpp*p/c.sbd)+c.sup);
+    r.superCages=r.supers*Math.ceil(r.pods/c.xb);
+    r.xCap=c.xp*c.xs;
+    if(r.taper>1.001) w.push(`Spine tier tapered ${fmtR(r.taper)}:1 toward the super-spines. Cross-pod traffic gets less bandwidth than traffic inside a pod.`);
+  }
+  if(os>1.001) w.push(`Leaf is ${fmtR(os)}:1 oversubscribed (${fmtG(downBW)} down vs ${fmtG(upBW)} up). Usually fine for front-end, risky for an AI backend.`);
+  r.hosts=r.leafs*hpl;
+  r.switches=r.leafs+r.spines+r.supers;
+  r.hostBW=r.hosts*hostSpeed;
+  const leafUp=r.leafs*upL*upSpeed, spUp=t3?r.spines*r.spUL*r.spUSpeed:Infinity;
+  r.bisect=Math.min(r.hostBW,leafUp,spUp)/2;
+  r.servers=Math.floor(r.hosts/Math.max(1,c.nic));
+  r.leafCages=r.leafs*(c.ldp+c.lup);
+  r.cages=r.leafCages+r.spineCages+r.superCages;
+  r.fibers=r.lsLinks+r.ssLinks;
+  if(c.tgt>0){
+    const b={};
+    b.leafs=Math.ceil(c.tgt/hpl);
+    if(!t3){
+      b.fits=b.leafs<=r.leafs; b.spines=r.spines; b.supers=0;
+      b.ssLinks=0; b.spineCages=b.spines*Math.ceil(b.leafs*p/c.sbd); b.superCages=0;
+    }else{
+      b.pods=Math.ceil(b.leafs/r.lpp); b.fits=b.pods<=r.pods;
+      b.spines=b.pods*r.spp; b.supers=r.supers;
+      b.ssLinks=b.spines*r.spUL;
+      b.spineCages=b.spines*(Math.ceil(r.lpp*p/c.sbd)+c.sup); b.superCages=b.supers*Math.ceil(b.pods/c.xb);
+    }
+    b.lsLinks=b.leafs*upL;
+    b.hosts=b.leafs*hpl; b.switches=b.leafs+b.spines+b.supers;
+    b.leafCages=b.leafs*(c.ldp+c.lup); b.cages=b.leafCages+b.spineCages+b.superCages; b.fibers=b.lsLinks+b.ssLinks;
+    b.servers=Math.floor(c.tgt/Math.max(1,c.nic));
+    if(!b.fits) w.push(`Target of ${fmt(c.tgt)} exceeds this design's max of ${fmt(r.hosts)}. ${t3?"Use higher-radix switches or more breakout.":"Go 3-tier, add breakout, or use a higher-radix spine."}`);
+    r.build=b;
+  }
+  return r;
+}
+function fmt(n){return Number.isFinite(n)?Math.round(n).toLocaleString("en-US"):"–"}
+function fmtR(x){return (Math.round(x*100)/100).toString()}
+function fmtG(g){return g>=1000?fmtR(g/1000)+"T":g+"G"}
+function bw(g){return g>=1e6?fmtR(g/1e6)+" Pbps":fmtR(g/1e3)+" Tbps"}
+/*ENDCALC*/
+
+const $=id=>document.getElementById(id);
+const opt=(el,arr,f)=>{el.innerHTML=arr.map(v=>`<option value="${v}">${f(v)}</option>`).join("")};
+["lds","lus","sds","sus","xs"].forEach(id=>opt($(id),SPEEDS,v=>v+"G"));
+["lbh","lbu","sbd","sbu","xb"].forEach(id=>opt($(id),BK,v=>v+"×"));
+opt($("par"),PAR,v=>v===1?"1 (one per spine)":v+" parallel");
+$("presets").innerHTML=PRESETS.map((p,i)=>`<button type="button" class="chip" data-i="${i}">${p.n}</button>`).join("");
+
+let S;
+try{S={...DEF,...JSON.parse(localStorage.getItem("closEnc3")||"{}")}}catch(e){S={...DEF}}
+
+function toForm(){
+  KEYS.forEach(k=>$(k).value=S[k]);
+  $("tgt").value=S.tgt||"";
+  document.querySelectorAll("#tiers button").forEach(b=>b.classList.toggle("on",+b.dataset.t===S.t));
+  $("root").classList.toggle("t3",S.t===3);
+}
+function fromForm(){
+  KEYS.forEach(k=>S[k]=Math.max(1,parseInt($(k).value)||1));
+  S.tgt=Math.max(0,parseInt($("tgt").value)||0);
+}
+
+let R;
+function render(){
+  R=calc(S);
+  try{localStorage.setItem("closEnc3",JSON.stringify(S))}catch(e){}
+  $("leafBox").innerHTML=`Box: ${S.ldp}×${S.lds}G + ${S.lup}×${S.lus}G = <b>${fmtG(R.leafCap)}</b> · ${R.hpl}×${R.hostSpeed}G hosts, ${R.upL}×${R.upSpeed}G uplinks`;
+  $("spineBox").innerHTML=`Box: ${S.sdp}×${S.sds}G${S.t===3?` + ${S.sup}×${S.sus}G`:""} = <b>${fmtG(R.spineCap)}</b> · ${R.spDL}×${R.spDSpeed}G to leafs${S.t===3?`, ${R.spUL}×${R.spUSpeed}G up`:""}`;
+  document.querySelectorAll(".chip").forEach(b=>{const c=PRESETS[b.dataset.i].c;const keys=c.t===3?Object.keys(c):Object.keys(c).filter(k=>!["sup","sus","sbu","xp","xs","xb"].includes(k));b.classList.toggle("on",keys.every(k=>S[k]===c[k]))});
+  $("bigN").textContent=fmt(R.hosts);
+  $("bigSub").innerHTML=`<b>host ports × ${R.hostSpeed}G</b> at max scale<br>${bw(R.hostBW)} · ${R.os<=1.001?"non-blocking at the leaf":fmtR(R.os)+":1 at the leaf"}`;
+  const st=[
+    ["Leafs",fmt(R.leafs)],["Spines",fmt(R.spines)],
+    ...(R.t===3?[["Super-spines",fmt(R.supers)],["Pods",fmt(R.pods)]]:[]),
+    ["Total switches",fmt(R.switches)],["Bisection",bw(R.bisect)],
+    ["Leaf ECMP next hops",fmt(R.upL)],["One spine lost costs",fmtR(100/Math.max(1,R.spg))+"%"],
+    [`Servers (${S.nic} NICs)`,fmt(R.servers)],["Fabric fiber runs",fmt(R.fibers)]
+  ];
+  $("stats").innerHTML=st.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join("");
+  $("warn").innerHTML=R.w.map(x=>`<li>${x}</li>`).join("");
+  mathList(); bom(); draw();
+}
+
+function mathList(){
+  const L=[
+    `Hosts per leaf = ${S.ldp} ports × ${S.lbh} = <code>${R.hpl} × ${R.hostSpeed}G</code>`,
+    `Leaf uplinks = ${S.lup} ports × ${S.lbu} = <code>${R.upL} × ${R.upSpeed}G</code>`,
+    `Leaf oversubscription = ${fmtG(R.downBW)} down ÷ ${fmtG(R.upBW)} up = <code>${fmtR(R.os)}:1</code>`,
+    `Spines${R.t===3?" per pod":""} = ${R.upL} uplinks ÷ ${R.p} link${R.p>1?"s":""} per spine = <code>${R.spg}</code>`,
+    `Spine leaf-facing ports = ${S.sdp} × ${S.sbd} = <code>${R.spDL} × ${R.spDSpeed}G</code>`
+  ];
+  if(R.t===2){
+    L.push(`Max leafs = ${R.spDL} ÷ ${R.p} = <code>${R.leafs}</code>`);
+    L.push(`Host ports = ${R.leafs} leafs × ${R.hpl} = <code>${fmt(R.hosts)}</code>`);
+  }else{
+    L.push(`Leafs per pod = ${R.spDL} ÷ ${R.p} = <code>${R.lpp}</code>`);
+    L.push(`Spine uplinks = ${S.sup} × ${S.sbu} = <code>${R.spUL} × ${R.spUSpeed}G</code>, taper <code>${fmtR(R.taper)}:1</code>`);
+    L.push(`Planes = spines per pod = <code>${R.planes}</code>; ${R.spUL} super-spines per plane → <code>${fmt(R.supers)}</code>`);
+    L.push(`Pods = super-spine ports = ${S.xp} × ${S.xb} = <code>${R.pods}</code>`);
+    L.push(`Host ports = ${R.pods} pods × ${R.lpp} leafs × ${R.hpl} = <code>${fmt(R.hosts)}</code>`);
+  }
+  L.push(`Host bandwidth = ${fmt(R.hosts)} × ${R.hostSpeed}G = <code>${bw(R.hostBW)}</code>`);
+  $("math").innerHTML=L.map(x=>`<li>${x}</li>`).join("");
+}
+
+function bom(){
+  const b=R.build, T=!!b, t3=R.t===3;
+  $("bomT").style.display=T?"":"none";
+  $("bomT").textContent=T?`${fmt(S.tgt)} hosts`:"";
+  const rows=[
+    ["Leaf switches",R.leafs,b&&b.leafs],["Spine switches",R.spines,b&&b.spines],
+    ...(t3?[["Super-spine switches",R.supers,b&&b.supers]]:[]),
+    ["Total switches",R.switches,b&&b.switches],
+    [`Leaf–spine links (${R.upSpeed}G)`,R.lsLinks,b&&b.lsLinks],
+    ...(t3?[[`Spine–super-spine links (${R.spUSpeed}G)`,R.ssLinks,b&&b.ssLinks]]:[]),
+    ["Leaf optics (cages)",R.leafCages,b&&b.leafCages],["Spine optics (cages)",R.spineCages,b&&b.spineCages],
+    ...(t3?[["Super-spine optics (cages)",R.superCages,b&&b.superCages]]:[]),
+    ["Switch optics total",R.cages,b&&b.cages],
+    [`Host cables (${R.hostSpeed}G)`,R.hosts,b&&b.hosts],
+    [`Servers (${S.nic} NICs)`,R.servers,b&&b.servers]
+  ];
+  $("bom").innerHTML=rows.map(([a,m,t])=>`<tr><td>${a}</td><td class="n">${fmt(m)}</td>${T?`<td class="n">${fmt(t)}</td>`:""}</tr>`).join("");
+}
+
+const svg=$("topo");
+function draw(){
+  const W=svg.clientWidth,H=svg.clientHeight; if(!W||!H||!R) return;
+  const narrow=W<520, padL=16, padR=16;
+  let o="";
+  const node=(x,y,w,col,hl)=>`<rect x="${x-w/2}" y="${y-7}" width="${w}" height="14" rx="3" fill="${col}" ${hl?'stroke="var(--pink)" stroke-width="2.5"':''}/>`;
+  const ln=(x1,y1,x2,y2,tr,col,op)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-opacity="${op}" stroke-width="${tr?2.5:1}" ${tr?'class="trace"':''}/>`;
+  const label=(x,y,t,a)=>`<text x="${x}" y="${y}" text-anchor="${a||"start"}">${t}</text>`;
+  const spread=(n,x0,x1)=>Array.from({length:n},(_,i)=>n===1?(x0+x1)/2:x0+(x1-x0)*i/(n-1));
+  const PL=["var(--pink)","var(--teal)","var(--amber)","var(--green)"];
+  if(R.t===2){
+    const yS=H*.22,yL=H*.6,yH=H*.86;
+    const nL=Math.max(1,Math.min(R.leafs,narrow?8:16)),nS=Math.max(1,Math.min(R.spines,narrow?6:12));
+    const xL=spread(nL,padL+20,W-padR-20),xS=spread(nS,padL+40,W-padR-40);
+    const wL=Math.min(26,(W-40)/nL*.7),wS=Math.min(34,(W-80)/nS*.7);
+    xL.forEach(x=>xS.forEach(s=>o+=ln(x,yL-7,s,yS+7,0,"var(--ink)",.18)));
+    xS.forEach(s=>o+=ln(xL[0],yL-7,s,yS+7,1,"var(--pink)",.9));
+    xL.forEach(x=>{const k=Math.min(R.hpl,4);for(let h=0;h<k;h++)o+=ln(x,yL+7,x+(h-(k-1)/2)*(wL/k),yH,0,"var(--teal)",.6)});
+    xS.forEach(s=>o+=node(s,yS,wS,"var(--ink)"));
+    xL.forEach((x,i)=>o+=node(x,yL,wL,"var(--ink)",i===0));
+    o+=label(padL,yS-18,`Spines ×${fmt(R.spines)}${R.spines>nS?" (showing "+nS+")":""} · ${R.spDL}×${R.spDSpeed}G down`);
+    o+=label(padL,yL-18,`Leafs ×${fmt(R.leafs)}${R.leafs>nL?" (showing "+nL+")":""} · ${R.upL}×${R.upSpeed}G up`);
+    o+=label(padL,yH+20,`${R.hpl} hosts × ${R.hostSpeed}G per leaf`);
+  }else{
+    const yX=H*.14,yS=H*.44,yL=H*.7,yH=H*.88;
+    const nPl=Math.max(1,Math.min(R.planes,4)),nPer=Math.max(1,Math.min(R.spPlane,narrow?2:3));
+    const nS=Math.max(1,Math.min(R.spp,nPl)),nL=Math.max(1,Math.min(R.lpp,narrow?3:4));
+    const gap=narrow?30:60,podW=(W-padL-padR-gap)/2;
+    const supers=[],grpW=(W-padL-padR)/nPl;
+    for(let q=0;q<nPl;q++)spread(nPer,padL+grpW*q+grpW*.2,padL+grpW*(q+1)-grpW*.2).forEach(x=>supers.push({x,p:q}));
+    const pods=[padL,padL+podW+gap].map(x0=>({s:spread(nS,x0+podW*.15,x0+podW*.85),l:spread(nL,x0+podW*.1,x0+podW*.9)}));
+    const wN=Math.min(24,podW/Math.max(nS,nL)*.6);
+    pods.forEach(pd=>{
+      pd.l.forEach(lx=>pd.s.forEach(sx=>o+=ln(lx,yL-7,sx,yS+7,0,"var(--ink)",.22)));
+      pd.s.forEach((sx,si)=>supers.filter(u=>u.p===si).forEach(u=>o+=ln(sx,yS-7,u.x,yX+7,0,PL[si%4],.55)));
+      pd.l.forEach(lx=>{const k=Math.min(R.hpl,3);for(let h=0;h<k;h++)o+=ln(lx,yL+7,lx+(h-(k-1)/2)*(wN/k),yH,0,"var(--teal)",.6)});
+    });
+    const A=pods[0],B=pods[1],u0=supers[0],bl=B.l[B.l.length-1];
+    o+=ln(A.l[0],yL-7,A.s[0],yS+7,1,"var(--pink)",.95)+ln(A.s[0],yS-7,u0.x,yX+7,1,"var(--pink)",.95)+ln(u0.x,yX+7,B.s[0],yS-7,1,"var(--pink)",.95)+ln(B.s[0],yS+7,bl,yL-7,1,"var(--pink)",.95);
+    supers.forEach(u=>o+=node(u.x,yX,wN,PL[u.p%4]));
+    pods.forEach((pd,pi)=>{pd.s.forEach((sx,si)=>o+=node(sx,yS,wN,"var(--ink)")+`<rect x="${sx-wN/2}" y="${yS+4}" width="${wN}" height="3" fill="${PL[si%4]}"/>`);pd.l.forEach((lx,li)=>o+=node(lx,yL,wN,"var(--ink)",(pi===0&&li===0)||(pi===1&&li===pd.l.length-1)))});
+    o+=label(W/2,(yS+yL)/2+5,"…","middle");
+    o+=label(padL,yX-16,`Super-spines: ${R.planes} planes × ${R.spPlane} = ${fmt(R.supers)} · ${R.xSpeed}G`);
+    o+=label(padL,yS-18,`Spines: ${R.spp} per pod · ${R.upSpeed}G down / ${R.spUSpeed}G up`);
+    o+=label(padL,yH+20,`${fmt(R.pods)} pods × ${R.lpp} leafs × ${R.hpl} hosts`);
+    if(!narrow)o+=label(W-padR,yH+20,"pink: cross-pod path","end");
+  }
+  svg.innerHTML=o;
+}
+const ro=new ResizeObserver(draw);ro.observe(svg);
+
+document.querySelector(".ctl").addEventListener("input",e=>{if(e.target.matches("input,select")){fromForm();render()}});
+$("tiers").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.t=+b.dataset.t;toForm();render()});
+$("presets").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;S={...S,...PRESETS[b.dataset.i].c};toForm();render()});
+$("reset").addEventListener("click",()=>{S={...DEF};toForm();render()});
+$("copy").addEventListener("click",async()=>{
+  const t=[`Clos Encounters: ${R.t}-tier`,
+    `Leaf: ${S.ldp}×${S.lds}G down (${S.lbh}×) + ${S.lup}×${S.lus}G up (${S.lbu}×) → ${R.hpl}×${R.hostSpeed}G hosts, ${R.upL}×${R.upSpeed}G uplinks`,
+    `Spine: ${S.sdp}×${S.sds}G down (${S.sbd}×)${R.t===3?` + ${S.sup}×${S.sus}G up (${S.sbu}×); super-spine ${S.xp}×${S.xs}G (${S.xb}×)`:""}`,
+    `Max hosts: ${fmt(R.hosts)} × ${R.hostSpeed}G = ${bw(R.hostBW)} · leaf oversub ${fmtR(R.os)}:1`,
+    `Switches: ${fmt(R.leafs)} leaf + ${fmt(R.spines)} spine${R.t===3?` + ${fmt(R.supers)} super-spine`:""} = ${fmt(R.switches)}`,
+    `Fabric links: ${fmt(R.fibers)} · switch optics: ${fmt(R.cages)} · bisection ${bw(R.bisect)}`].join("\n");
+  try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){$("copy").textContent="Copy blocked"}
+  setTimeout(()=>$("copy").textContent="Copy summary",1500);
+});
+toForm();render();
+}
+</script>
+</body>
+</html>
