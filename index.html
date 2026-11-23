@@ -26,6 +26,9 @@ h2{font-size:24px;margin:0 0 12px;font-weight:700}
 .wrap{max-width:1240px;margin:0 auto}
 .head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:20px}
 .head p{margin:0;color:var(--mute);max-width:60ch}
+.headR{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:flex-end}
+.seg.theme{flex:none}
+.seg.theme button{flex:none;min-height:38px;padding:0 12px;font-size:14px}
 .grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;grid-template-areas:"ctl out";align-items:start}
 .ctl{grid-area:ctl}.out{grid-area:out}
 @media(min-width:861px){.out{position:sticky;top:12px}}
@@ -82,7 +85,10 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 <div class="band"><div class="wrap">
   <div class="head">
     <h1>Clos Encounters</h1>
-    <p>Leaf/spine and 3-tier fabric sizing: port groups and link speeds per layer, switch counts, links and optics, with the fabric drawn live.</p>
+    <div class="headR">
+      <p>Leaf/spine and 3-tier fabric sizing: port groups and link speeds per layer, switch counts, links and optics, with the fabric drawn live.</p>
+      <div class="seg theme" id="theme" role="group" aria-label="Theme"><button type="button" data-m="auto">Auto</button><button type="button" data-m="light">Light</button><button type="button" data-m="dark">Dark</button></div>
+    </div>
   </div>
 
   <div class="grid" id="root">
@@ -409,6 +415,14 @@ $("copy").addEventListener("click",async()=>{
   try{await navigator.clipboard.writeText(t);$("copy").textContent="Copied"}catch(e){$("copy").textContent="Copy blocked"}
   setTimeout(()=>$("copy").textContent="Copy summary",1500);
 });
+const applyTheme=m=>{
+  if(m==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",m);
+  document.querySelectorAll("#theme button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+  try{localStorage.setItem("closTheme",m)}catch(e){}
+};
+let tm="auto";try{tm=localStorage.getItem("closTheme")||"auto"}catch(e){}
+applyTheme(tm);
+$("theme").addEventListener("click",e=>{const b=e.target.closest("button");if(b)applyTheme(b.dataset.m)});
 toForm();render();
 }
 </script>
