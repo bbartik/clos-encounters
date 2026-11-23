@@ -264,7 +264,9 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
       </div>
     </div>
     <div style="overflow-x:auto"><table class="otab"><thead><tr><th>Link</th><th>Distance</th><th>Media</th><th>Parts</th></tr></thead><tbody id="oBody"></tbody></table></div>
-    <p class="foot">Recommended picks the lowest-cost medium that reaches: DAC, then AEC, then fiber for your plant. AOC (up to about 30 m) is available to pick but not auto-recommended, since large fabrics usually standardize on transceivers and structured fiber (SR on multimode; DR, FR, LR on single-mode). Reaches are typical values (DAC 1–3 m by speed, AEC 5–7 m, SR 50 m, DR 500 m, FR 2 km, LR 10 km); check the optic datasheet. Each switch cage gets one optic, so a breakout optic counts once. Quantities follow the cost estimator's Max scale / Target build setting.</p>
+    <div class="copts"><button class="btn" id="oXlsx" type="button">Download cable matrix (.xlsx)</button><span id="oMsg" class="olab"></span></div>
+    <p class="foot">The cable matrix has one row per link (server NIC to leaf, leaf to spine, spine to super-spine) with device names, ports, optics, cables and planned length, plus Summary and BOM tabs whose quantities are SUMIFS formulas over the matrix. It follows the Max scale / Target build setting; use Target build for large fabrics.</p>
+    <p class="foot">Recommended picks the lowest-cost medium that reaches: DAC, then AEC, then fiber for your plant (SR on multimode; DR, FR, LR on single-mode). AOC (up to about 30 m) can be picked but isn't auto-recommended, since large fabrics usually standardize on transceivers and structured fiber. Reaches are typical values (DAC 1–3 m by speed, AEC 5–7 m, SR 50 m, DR 500 m, FR 2 km, LR 10 km); check the optic datasheet. Each switch cage gets one optic, so a breakout optic counts once. Quantities follow the cost estimator's Max scale / Target build setting.</p>
   </section>
 
   <section class="card cart" aria-label="Cost estimator">
@@ -761,7 +763,138 @@ function csv(){
   return L.join("\n");
 }
 $("cCopy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(csv());$("csvMsg").textContent="CSV copied"}catch(e){$("csvMsg").textContent="Copy blocked by the browser"}});
-$("cDl").addEventListener("click",()=>{try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv()],{type:"text/csv"}));a.download="clos-encounters-bom.csv";document.body.appendChild(a);a.click();a.remove()}catch(e){$("csvMsg").textContent="Download blocked here; use Copy CSV"}});
+/* ---------- cable matrix (.xlsx) ---------- */
+function genLinks(){
+  const {n,pods}=basisCounts(), c=S, r=R, RA=r.rail, Rr=RA?RA.R:1, plane=!!(RA&&RA.plane), P=plane?Rr:1, t3=c.t===3;
+  const tgt=CART.basis==="target"&&r.build;
+  const lpp=t3?r.lpp:n.leaf/P, spp=t3?r.spp:n.spine/P;
+  const plan=opticsPlan(n,pods), lay=id=>plan.find(x=>x.id===id);
+  const isCu=L=>L&&(MEDIA[L.m].k==="cu"||MEDIA[L.m].k==="aoc");
+  const nm=(L,end)=>{const x=L.parts.find(p=>p.end===end);return x?x.name:""};
+  const cab=L=>isCu(L)?L.parts[0].name:nm(L,"Fiber runs");
+  const pad=(x,w)=>String(x).padStart(w||2,"0");
+  const mdl=k=>(c.sel&&c.sel[k])||({leaf:"Leaf",spine:"Spine",super:"Super-spine"}[k]);
+  const port=(cg,ch,b)=>b>1?`p${cg}:${ch}`:`p${cg}`;
+  const leafName=(p,idx)=>{const pod=t3?`P${pad(Math.floor(idx/lpp)+1)}-`:"";
+    if(RA&&!plane)return `${pod}LF-SU${pad(Math.floor(idx/Rr)+1)}-R${idx%Rr}`;
+    if(plane)return `${pod}LF-SU${pad(idx+1)}-R${p}`;
+    return `${pod}LF-${pad(idx+1,3)}`};
+  const spName=(p,pod,j)=>`${plane?`R${p}-`:""}${t3?`P${pad(pod+1)}-`:""}SP-${pad(j+1)}`;
+  const ssName=(p,i,v)=>`${plane?`R${p}-`:""}SS-PL${pad(i+1)}-${pad(v+1)}`;
+  const rows=[];let id=0;
+  const add=(tier,sp,a,cable,cq,len,b,note)=>rows.push([`L${pad(++id,6)}`,"Backend",tier,fmtG(sp),a[0],a[1],a[2],a[3],a[4],cable,cq,len,b[0],b[1],b[2],b[3],b[4],note||""]);
+  // host links
+  const Lh=lay("host"),hc=isCu(Lh),nicOn=!!c.opt.nic&&!hc;
+  const hpl=r.hpl, nicOpt=nicOn?nm(Lh,"NIC end"):"", leafHostOpt=hc?"":nm(Lh,"Leaf end"), hcab=cab(Lh);
+  const hostLink=(srv,i,p,idx,k)=>{
+    const cg=Math.floor(k/c.lbh)+1,ch=k%c.lbh+1,first=ch===1;
+    add(RA?"Server-Leaf (rail "+i+")":"Server-Leaf",r.hostSpeed,
+      [`SRV-${pad(srv+1,4)}`,"GPU server",`NIC${i}`,nicOpt,nicOn?1:0],
+      hcab,hc&&c.lbh>1?(first?1:0):1,Lh.d,
+      [leafName(p,idx),mdl("leaf"),port(cg,ch,c.lbh),leafHostOpt,!hc&&first?1:0],
+      c.lbh>1?`${c.lbh}×${fmtG(r.hostSpeed)} breakout, ch ${ch-1}`:"");
+  };
+  if(RA){
+    const su=tgt?r.build.su:r.su;
+    for(let s=0;s<su;s++)for(let k=0;k<hpl;k++)for(let i=0;i<Rr;i++)hostLink(s*hpl+k,i,plane?i:0,plane?s:s*Rr+i,k);
+  }else{
+    const nicN=Math.max(1,c.nic), cap=n.leaf*hpl, srvN=tgt?Math.ceil(c.tgt/nicN):Math.floor(cap/nicN);
+    for(let j=0;j<srvN;j++)for(let i=0;i<nicN;i++){const h=j*nicN+i;if(h>=cap)break;hostLink(j,i,0,Math.floor(h/hpl),h%hpl)}
+  }
+  // leaf-spine
+  const Lf=lay("fab"),fc=isCu(Lf),lOpt=fc?"":nm(Lf,"Leaf end"),sOpt=fc?"":nm(Lf,"Spine end"),fcab=cab(Lf);
+  for(let p=0;p<P;p++)for(let idx=0;idx<n.leaf/P;idx++){
+    const pod=t3?Math.floor(idx/lpp):0, li=t3?idx%lpp:idx;
+    for(let u=0;u<r.upL;u++){
+      const j=Math.floor(u/c.par), lc=c.ldp+Math.floor(u/c.lbu)+1, lch=u%c.lbu+1;
+      const sl=li*c.par+u%c.par, sc=Math.floor(sl/c.sbd)+1, sch=sl%c.sbd+1;
+      const cq=!fc?1:(c.lbu>1&&c.sbd===1?(lch===1?1:0):(c.sbd>1&&c.lbu===1?(sch===1?1:0):1));
+      add("Leaf-Spine",r.upSpeed,[leafName(p,idx),mdl("leaf"),port(lc,lch,c.lbu),lOpt,!fc&&lch===1?1:0],fcab,cq,Lf.d,
+        [spName(p,pod,j),mdl("spine"),port(sc,sch,c.sbd),sOpt,!fc&&sch===1?1:0],
+        [c.lbu>1?`leaf ${c.lbu}× breakout ch ${lch-1}`:"",c.sbd>1?`spine ${c.sbd}× breakout ch ${sch-1}`:""].filter(Boolean).join("; "));
+    }
+  }
+  // spine-super
+  if(t3){
+    const Lc=lay("core"),cc=isCu(Lc),aO=cc?"":nm(Lc,"Spine end"),zO=cc?"":nm(Lc,"Super-spine end"),ccab=cab(Lc);
+    for(let p=0;p<P;p++)for(let pod=0;pod<pods;pod++)for(let i=0;i<spp;i++)for(let v=0;v<r.spUL;v++){
+      const ac=c.sdp+Math.floor(v/c.sbu)+1,ach=v%c.sbu+1,zc=Math.floor(pod/c.xb)+1,zch=pod%c.xb+1;
+      const cq=!cc?1:(c.sbu>1&&c.xb===1?(ach===1?1:0):(c.xb>1&&c.sbu===1?(zch===1?1:0):1));
+      add("Spine-SuperSpine",r.spUSpeed,[spName(p,pod,i),mdl("spine"),port(ac,ach,c.sbu),aO,!cc&&ach===1?1:0],ccab,cq,Lc.d,
+        [ssName(p,i,v),mdl("super"),port(zc,zch,c.xb),zO,!cc&&zch===1?1:0],"");
+    }
+  }
+  return rows;
+}
+function estLinks(){const {n}=basisCounts();return n.leaf*R.hpl+n.leaf*R.upL+(S.t===3?n.spine*R.spUL:0)}
+function loadExcelJS(){
+  return window.ExcelJS?Promise.resolve():new Promise((ok,no)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";sc.onload=ok;sc.onerror=()=>no(new Error("Couldn't load the Excel library"));document.head.appendChild(sc)});
+}
+async function cableXlsx(){
+  const msg=t=>$("oMsg").textContent=t, est=estLinks();
+  if(est>250000){msg(`${fmt(est)} links is too many for a browser workbook. Switch the cost estimator to Target build with a smaller target.`);return}
+  msg("Building…");
+  try{
+    await loadExcelJS();
+    const rows=genLinks(), RA=R.rail, tgt=CART.basis==="target"&&R.build, {n}=basisCounts();
+    const wb=new ExcelJS.Workbook();wb.creator="Clos Encounters";
+    const HDR={font:{bold:true,color:{argb:"FFFFFFFF"}},fill:{type:"pattern",pattern:"solid",fgColor:{argb:"FF1B1A18"}}};
+    const hdr=row=>row.eachCell(c=>{c.font=HDR.font;c.fill=HDR.fill});
+    // Summary
+    const sm=wb.addWorksheet("Summary");
+    sm.columns=[{width:30},{width:60}];
+    sm.addRow(["Clos Encounters cable matrix"]).font={bold:true,size:14};
+    sm.addRow([`Generated ${new Date().toISOString().slice(0,10)}. Quantities: ${tgt?`target build (${fmt(S.tgt)} ${RA?"GPU ports":"hosts"})`:"max scale"}.`]);
+    sm.addRow([]);
+    const info=[
+      ["Fabric",RA?`Rail-optimized, ${RA.plane?"rail planes":"full-mesh spines"}, ${RA.R} rails`:"Standard Clos"],
+      ["Tiers",S.t===3?"3-tier (super-spine)":"2-tier"],
+      ...(RA?[["Scalable units",tgt?R.build.su:R.su]]:[]),
+      ["Servers",RA?(tgt?R.build.su:R.su)*R.hpl:new Set(rows.filter(x=>x[2].startsWith("Server")).map(x=>x[4])).size],
+      [RA?"GPU NIC ports":"Host ports",rows.filter(x=>x[2].startsWith("Server")).length],
+      ["Leaf switches",`${fmt(n.leaf)} × ${(S.sel&&S.sel.leaf)||"(no model selected)"}`],
+      ["Spine switches",`${fmt(n.spine)} × ${(S.sel&&S.sel.spine)||"(no model selected)"}`],
+      ...(S.t===3?[["Super-spine switches",`${fmt(n.super)} × ${(S.sel&&S.sel.super)||"(no model selected)"}`]]:[]),
+      ["Leaf ports",`${S.ldp}×${fmtG(S.lds)} down (${S.lbh}× breakout) + ${S.lup}×${fmtG(S.lus)} up (${S.lbu}× breakout)`],
+      ["Spine ports",`${S.sdp}×${fmtG(S.sds)} down (${S.sbd}× breakout)${S.t===3?` + ${S.sup}×${fmtG(S.sus)} up (${S.sbu}×)`:""}`],
+      ["Links (rows)",rows.length],
+      ["Port naming","pN = switch cage N; pN:M = breakout channel M of cage N. Optic qty is 1 on channel 1 only, so a breakout optic is counted once."]
+    ];
+    info.forEach(x=>{const rw=sm.addRow(x);rw.getCell(1).font={bold:true}});
+    // Matrix
+    const H=["Link ID","Network","Tier","Speed","A Device","A Model","A Port","A Optic","A Optic Qty","Cable","Cable Qty","Planned Length (m)","B Device","B Model","B Port","B Optic","B Optic Qty","Notes"];
+    const Wd=[11,10,20,7,18,18,9,32,9,40,8,10,20,18,9,32,9,34];
+    const ws=wb.addWorksheet("Cable Matrix",{views:[{state:"frozen",xSplit:4,ySplit:1}]});
+    ws.columns=H.map((h,i)=>({header:h,width:Wd[i]}));
+    hdr(ws.getRow(1));
+    ws.addRows(rows);
+    ws.autoFilter={from:{row:1,column:1},to:{row:rows.length+1,column:H.length}};
+    // BOM with formulas
+    const bm=wb.addWorksheet("BOM",{views:[{state:"frozen",ySplit:1}]});
+    bm.columns=[{header:"Category",width:12},{header:"Part",width:44},{header:"Qty",width:10},{header:"Unit price",width:14},{header:"Extended",width:16},{header:"Qty basis",width:46}];
+    hdr(bm.getRow(1));
+    const tot={},cabT={};
+    rows.forEach(x=>{if(x[7])tot[x[7]]=(tot[x[7]]||0)+x[8];if(x[15])tot[x[15]]=(tot[x[15]]||0)+x[16];if(x[9])cabT[x[9]]=(cabT[x[9]]||0)+x[10]});
+    let rn=2;
+    const line=(cat,part,qty,formula,price,basis,blue)=>{
+      const rw=bm.addRow([cat,part,formula?{formula,result:qty}:qty,price||null,{formula:`C${rn}*D${rn}`,result:qty*(price||0)},basis]);
+      if(blue)rw.getCell(3).font={color:{argb:"FF1F4FD8"}};
+      rw.getCell(4).numFmt="$#,##0";rw.getCell(5).numFmt="$#,##0";rn++;
+    };
+    const sw={};[["leaf",n.leaf],["spine",n.spine],...(S.t===3?[["super",n.super]]:[])].forEach(([k,q])=>{const m=(S.sel&&S.sel[k])||({leaf:"Leaf switch",spine:"Spine switch",super:"Super-spine switch"}[k]);sw[m]=(sw[m]||0)+q});
+    Object.entries(sw).forEach(([m,q])=>line("Switching",m,q,null,+PRICES["sw:"+m]||0,"Count from topology",true));
+    Object.entries(tot).forEach(([pt,q])=>line("Optics",pt,q,`SUMIFS('Cable Matrix'!I:I,'Cable Matrix'!H:H,B${rn})+SUMIFS('Cable Matrix'!Q:Q,'Cable Matrix'!P:P,B${rn})`,+PRICES["opt:"+norm(pt)]||0,"Sum of optic qty on Cable Matrix"));
+    Object.entries(cabT).forEach(([pt,q])=>line("Cabling",pt,q,`SUMIFS('Cable Matrix'!K:K,'Cable Matrix'!J:J,B${rn})`,+PRICES["opt:"+norm(pt)]||0,"Sum of cable qty on Cable Matrix"));
+    const tr=bm.addRow(["","Total","","",{formula:`SUM(E2:E${rn-1})`,result:0},""]);tr.font={bold:true};tr.getCell(5).numFmt="$#,##0";
+    bm.addRow([]);bm.addRow(["","Blue qty = count from the topology; black = SUMIFS formula over the Cable Matrix tab. Unit prices come from the cost estimator."]);
+    const buf=await wb.xlsx.writeBuffer();
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+    a.download=`clos-encounters-cable-matrix${tgt?"-"+S.tgt:""}.xlsx`;document.body.appendChild(a);a.click();a.remove();
+    msg(`Downloaded ${fmt(rows.length)} links`);
+  }catch(e){msg((e&&e.message)||"Couldn't build the workbook here")}
+}
+$("oXlsx").addEventListener("click",cableXlsx);
+$("cDl").addEventListener("click",()=>{try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv()],{type:"text/csv;charset=utf-8"}));a.download="clos-encounters-bom.csv";document.body.appendChild(a);a.click();a.remove()}catch(e){$("csvMsg").textContent="Download blocked here; use Copy CSV"}});
 $("vend").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;vend=b.dataset.v;models()});
 
 function mathList(){
