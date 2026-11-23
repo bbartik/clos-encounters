@@ -51,6 +51,31 @@ h2{font-size:24px;margin:0 0 12px;font-weight:700}
 .fit.l2,.fit.l3{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--ink)}
 .stat-new{font-size:12px;font-weight:600;color:var(--amber)}
 .mempty{font-size:14px;color:var(--mute);border-top:1px solid var(--line);padding-top:10px}
+.selb{float:right;min-height:36px;padding:4px 12px;border-radius:8px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer;margin-left:8px}
+.selb.on{background:var(--pink);border-color:var(--pink);color:#fff}
+.cart{margin-top:20px}
+.chead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;margin-bottom:12px}
+.chead h2{margin:0}
+.ctot{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ctot .big{font-size:clamp(36px,5vw,56px)}
+.ctot span{color:var(--mute);font-size:15px}
+.ctab input{min-height:40px;padding:6px 8px}
+.ctab td.p{width:11em}.ctab td.q{width:7em}
+.ctab .nm input{min-width:10em}
+.ctab tfoot td{font-weight:600;border-bottom:0}
+.ctab tfoot tr.g td{font:700 20px "Space Grotesk",sans-serif;border-top:2px solid var(--ink)}
+.warn-tag{font-size:12px;font-weight:600;color:var(--pink);display:block}
+.xbtn{min-height:36px;min-width:36px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;cursor:pointer;font-size:16px}
+.copts{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:14px}
+.copts label.ck{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink);margin:0;min-height:44px}
+.copts label.ck input{width:20px;min-height:20px;accent-color:var(--pink)}
+.copts .disc{display:flex;align-items:center;gap:8px}
+.copts .disc label{margin:0;font-size:15px;color:var(--ink)}
+.copts .disc input{width:6em}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+#csvMsg{font-size:14px;color:var(--mute)}
+#basis button{padding:0 14px;white-space:nowrap}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .chip{font:500 13px Inter,sans-serif;min-height:36px;padding:6px 10px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
@@ -201,6 +226,25 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
       <p class="foot">Optics count switch-side cages populated, with every leaf port filled. A breakout optic is one transceiver feeding several cable runs. Host cables are counted per NIC.</p>
     </section>
   </div>
+
+  <section class="card cart" aria-label="Cost estimator">
+    <div class="chead">
+      <h2>BOM and cost estimator</h2>
+      <div class="seg" id="basis" role="group" aria-label="Quantity basis"><button type="button" data-b="max">Max scale</button><button type="button" data-b="target">Target build</button></div>
+    </div>
+    <div class="ctot"><div class="big" id="cTotal">$0</div><span id="cSub"></span></div>
+    <div style="overflow-x:auto;margin-top:10px"><table class="ctab"><thead><tr><th>Item</th><th>Role</th><th class="n">Qty</th><th class="n">Unit price ($)</th><th class="n">Extended</th><th></th></tr></thead><tbody id="cBody"></tbody><tfoot id="cFoot"></tfoot></table></div>
+    <div class="copts">
+      <label class="ck"><input type="checkbox" id="cOpt"> Include switch-side optics</label>
+      <div class="disc"><label for="cDisc">Discount %</label><input id="cDisc" type="number" min="0" max="100" step="0.5"></div>
+      <button class="btn ghost" id="cAdd" type="button">Add line</button>
+      <span class="btn ghost filebtn">Load price CSV<input id="cCsv" type="file" accept=".csv,text/csv" aria-label="Load price CSV"></span>
+      <button class="btn ghost" id="cCopy" type="button">Copy CSV</button>
+      <button class="btn ghost" id="cDl" type="button">Download CSV</button>
+      <span id="csvMsg"></span>
+    </div>
+    <p class="foot">Pick a model for each role with Select in Matching models. Prices are entered by you and stay in this browser. Price CSV format is one <code>item,price</code> per line, for example <code>7060DX5-32,100000</code> or <code>800G optic,1200</code>. NIC-side optics and cables aren't included; add them as lines.</p>
+  </section>
 </div></div>
 
 <script>
@@ -223,7 +267,7 @@ const PRESETS=[
  P("Fat-tree k=32 (3-tier)",{t:3,ldp:16,lds:400,lbh:1,lup:16,lus:400,lbu:1,sdp:16,sds:400,sbd:1,sup:16,sus:400,sbu:1,xp:32,xs:400,xb:1}),
  P("3-tier, 400G edge / 800G core",{t:3,ldp:32,lds:400,lbh:1,lup:32,lus:400,lbu:1,sdp:32,sds:800,sbd:2,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1})
 ];
-const DEF={...PRESETS[3].c,nic:8,tgt:768};
+const DEF={...PRESETS[3].c,nic:8,tgt:768,sel:{leaf:"7060X6-32PE",spine:"7060X6-32PE"}};
 const KEYS=["ldp","lds","lbh","lup","lus","lbu","sdp","sds","sbd","sup","sus","sbu","xp","xs","xb","par","nic"];
 
 /*CALC*/
@@ -395,7 +439,7 @@ function render(){
   try{localStorage.setItem("closEnc3",JSON.stringify(S))}catch(e){}
   $("leafBox").innerHTML=`Box: ${S.ldp}×${S.lds}G + ${S.lup}×${S.lus}G = <b>${fmtG(R.leafCap)}</b> · ${R.hpl}×${R.hostSpeed}G hosts, ${R.upL}×${R.upSpeed}G uplinks`;
   $("spineBox").innerHTML=`Box: ${S.sdp}×${S.sds}G${S.t===3?` + ${S.sup}×${S.sus}G`:""} = <b>${fmtG(R.spineCap)}</b> · ${R.spDL}×${R.spDSpeed}G to leafs${S.t===3?`, ${R.spUL}×${R.spUSpeed}G up`:""}`;
-  document.querySelectorAll(".chip").forEach(b=>{const c=PRESETS[b.dataset.i].c;const keys=c.t===3?Object.keys(c):Object.keys(c).filter(k=>!["sup","sus","sbu","xp","xs","xb"].includes(k));b.classList.toggle("on",keys.every(k=>S[k]===c[k]))});
+  document.querySelectorAll("#presets .chip").forEach(b=>{const c=PRESETS[b.dataset.i].c;const keys=c.t===3?Object.keys(c):Object.keys(c).filter(k=>!["sup","sus","sbu","xp","xs","xb"].includes(k));b.classList.toggle("on",keys.every(k=>S[k]===c[k]))});
   $("bigN").textContent=fmt(R.hosts);
   $("bigSub").innerHTML=`<b>host ports × ${R.hostSpeed}G</b> at max scale<br>${bw(R.hostBW)} · ${R.os<=1.001?"non-blocking at the leaf":fmtR(R.os)+":1 at the leaf"}`;
   const st=[
@@ -407,7 +451,7 @@ function render(){
   ];
   $("stats").innerHTML=st.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join("");
   $("warn").innerHTML=R.w.map(x=>`<li>${x}</li>`).join("");
-  mathList(); bom(); models(); draw();
+  mathList(); bom(); models(); renderCart(); draw();
 }
 
 let role="leaf", vend="All";
@@ -431,10 +475,116 @@ function models(){
     const fit=FIT[r.lvl]+(r.lvl===1||r.lvl===2?(r.spare?` · ${r.spare} ports spare`:""):"");
     return `<li class="mitem"><div class="mtop"><span class="vtag ${m.v}">${m.v}</span><a href="${m.u}" target="_blank" rel="noopener">${m.m}</a>${m.st?`<span class="stat-new">${m.st}</span>`:""}</div>
       <div class="mspec">${ports} ${m.f} · ${fmtR(m.cap)}T · ${m.chip}</div>
-      <span class="fit l${r.lvl}">${fit}</span></li>`;
+      <span class="fit l${r.lvl}">${fit}</span><button type="button" class="selb${S.sel&&S.sel[role]===m.m?" on":""}" data-m="${m.m}">${S.sel&&S.sel[role]===m.m?"Selected":"Select"}</button></li>`;
   }).join("");
 }
+$("mlist").addEventListener("click",e=>{
+  const b=e.target.closest(".selb");if(!b)return;
+  const sel={...(S.sel||{})};
+  if(sel[role]===b.dataset.m)delete sel[role];else sel[role]=b.dataset.m;
+  S.sel=sel;save();models();renderCart();
+});
 $("roles").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;role=b.dataset.r;models()});
+
+/* ---------- BOM and cost estimator ---------- */
+const load=(k,d)=>{try{return {...d,...JSON.parse(localStorage.getItem(k)||"{}")}}catch(e){return {...d}}};
+let PRICES=load("closPrices",{});
+let CART=load("closCart",{basis:"max",optics:true,disc:0});
+let LINES=[];try{LINES=JSON.parse(localStorage.getItem("closLines")||"[]")}catch(e){}
+const saveCart=()=>{try{localStorage.setItem("closPrices",JSON.stringify(PRICES));localStorage.setItem("closCart",JSON.stringify(CART));localStorage.setItem("closLines",JSON.stringify(LINES))}catch(e){}};
+function save(){try{localStorage.setItem("closEnc3",JSON.stringify(S))}catch(e){}}
+const money=n=>"$"+Math.round(n).toLocaleString("en-US");
+const short$=n=>n>=1e9?"$"+fmtR(n/1e9)+"B":n>=1e6?"$"+fmtR(n/1e6)+"M":n>=1e3?"$"+fmtR(n/1e3)+"K":money(n);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const RL={leaf:"Leaf",spine:"Spine",super:"Super-spine"};
+
+function cartRows(){
+  const b=CART.basis==="target"&&R.build?R.build:null;
+  const n={leaf:b?b.leafs:R.leafs,spine:b?b.spines:R.spines,super:b?b.supers:R.supers};
+  const pods=b?(b.pods||0):(R.pods||0);
+  const rows=[], by={};
+  for(const k of ["leaf","spine",...(S.t===3?["super"]:[])]){
+    const m=S.sel&&S.sel[k];if(!m)continue;
+    const cat=CATALOG.find(x=>x.m===m);
+    const ok=cat&&matchModel(cat,reqFor(k,S));
+    (by[m]=by[m]||{qty:0,roles:[],bad:[]}).qty+=n[k];
+    by[m].roles.push(RL[k]); if(!ok)by[m].bad.push(RL[k]);
+  }
+  for(const [m,v] of Object.entries(by))rows.push({key:"sw:"+m,name:m,role:v.roles.join(" + "),qty:v.qty,bad:v.bad});
+  if(CART.optics){
+    const o={},add=(s,q)=>{if(q>0)o[s]=(o[s]||0)+q};
+    add(S.lds,n.leaf*S.ldp);add(S.lus,n.leaf*S.lup);
+    if(S.t===2)add(S.sds,n.spine*Math.ceil(n.leaf*S.par/S.sbd));
+    else{add(S.sds,n.spine*Math.ceil(R.lpp*S.par/S.sbd));add(S.sus,n.spine*S.sup);add(S.xs,n.super*Math.ceil(pods/S.xb))}
+    Object.keys(o).map(Number).sort((a,b)=>b-a).forEach(s=>rows.push({key:"opt:"+s,name:`${fmtG(s)} optic`,role:"Switch-side cages",qty:o[s]}));
+  }
+  LINES.forEach((l,i)=>rows.push({key:"cl:"+i,custom:true,name:l.name,role:"Custom",qty:l.qty}));
+  return rows;
+}
+const priceOf=r=>r.custom?(+LINES[+r.key.slice(3)].price||0):(+PRICES[r.key]||0);
+
+let ROWS=[];
+function renderCart(){
+  if(!R)return;
+  ROWS=cartRows();
+  document.querySelectorAll("#basis button").forEach(b=>{b.classList.toggle("on",b.dataset.b===CART.basis);b.disabled=b.dataset.b==="target"&&!R.build});
+  if(CART.basis==="target"&&!R.build)CART.basis="max";
+  $("cOpt").checked=!!CART.optics; $("cDisc").value=CART.disc||"";
+  $("cBody").innerHTML=ROWS.length?ROWS.map((r,i)=>{
+    const p=priceOf(r)||"";
+    const nm=r.custom?`<td class="nm"><input data-i="${i}" data-f="name" value="${esc(r.name)}" aria-label="Item name"></td>`:`<td><b>${esc(r.name)}</b>${r.bad&&r.bad.length?`<span class="warn-tag">Doesn't fit current ${r.bad.join("/").toLowerCase()} ports</span>`:""}</td>`;
+    const q=r.custom?`<td class="n q"><input data-i="${i}" data-f="qty" type="number" min="0" value="${r.qty}" aria-label="Quantity"></td>`:`<td class="n">${fmt(r.qty)}</td>`;
+    return `<tr>${nm}<td>${r.role}</td>${q}<td class="n p"><input data-i="${i}" data-f="price" type="number" min="0" step="any" value="${p}" placeholder="0" aria-label="Unit price for ${esc(r.name)}"></td><td class="n" id="ext${i}"></td><td>${r.custom?`<button type="button" class="xbtn" data-x="${i}" aria-label="Remove line">×</button>`:""}</td></tr>`;
+  }).join(""):`<tr><td colspan="6" class="mempty">Nothing selected yet. Use Select on a model in Matching models for each role.</td></tr>`;
+  totals();
+}
+function totals(){
+  let sub=0,sw=0;
+  ROWS.forEach((r,i)=>{const e=r.qty*priceOf(r);sub+=e;if(r.key.startsWith("sw:"))sw+=r.qty;const c=$("ext"+i);if(c)c.textContent=e?money(e):"–"});
+  const d=Math.min(100,Math.max(0,+CART.disc||0)), disc=sub*d/100, tot=sub-disc;
+  $("cFoot").innerHTML=`<tr><td colspan="4">Subtotal</td><td class="n">${money(sub)}</td><td></td></tr>`+(d?`<tr><td colspan="4">Discount ${fmtR(d)}%</td><td class="n">−${money(disc)}</td><td></td></tr>`:"")+`<tr class="g"><td colspan="4">Total</td><td class="n">${money(tot)}</td><td></td></tr>`;
+  $("cTotal").textContent=short$(tot);
+  $("cSub").textContent=`${fmt(sw)} switches · ${CART.basis==="target"&&R.build?fmt(S.tgt)+" host target":"max scale, "+fmt(R.hosts)+" hosts"}${R.hosts&&tot?` · ${money(tot/(CART.basis==="target"&&R.build?S.tgt:R.hosts))} per host port`:""}`;
+}
+$("cBody").addEventListener("input",e=>{
+  const t=e.target,i=+t.dataset.i,r=ROWS[i];if(!r)return;
+  if(r.custom){const l=LINES[+r.key.slice(3)];if(t.dataset.f==="name")l.name=t.value;else if(t.dataset.f==="qty"){l.qty=Math.max(0,+t.value||0);r.qty=l.qty}else l.price=Math.max(0,+t.value||0)}
+  else if(t.dataset.f==="price")PRICES[r.key]=Math.max(0,+t.value||0);
+  saveCart();totals();
+});
+$("cBody").addEventListener("click",e=>{const b=e.target.closest(".xbtn");if(!b)return;LINES.splice(+ROWS[+b.dataset.x].key.slice(3),1);saveCart();renderCart()});
+$("basis").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;CART.basis=b.dataset.b;saveCart();renderCart()});
+$("cOpt").addEventListener("change",e=>{CART.optics=e.target.checked;saveCart();renderCart()});
+$("cDisc").addEventListener("input",e=>{CART.disc=+e.target.value||0;saveCart();totals()});
+$("cAdd").addEventListener("click",()=>{LINES.push({name:"Support / services",qty:1,price:0});saveCart();renderCart()});
+$("cCsv").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let n=0;
+    String(rd.result).split(/\r?\n/).forEach(line=>{
+      const c=line.split(",");if(c.length<2)return;
+      const name=c[0].trim().replace(/^"|"$/g,""), price=parseFloat(c.slice(1).join("").replace(/[$\s"]/g,""));
+      if(!name||!Number.isFinite(price))return;
+      const om=name.match(/^(\d+(?:\.\d+)?)\s*(g|t)\b.*optic/i);
+      if(om){PRICES["opt:"+Math.round(+om[1]*(om[2].toLowerCase()==="t"?1000:1))]=price;n++;return}
+      const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^(dcs|n9k|n9kc)/,"");
+      const cat=CATALOG.find(x=>norm(x.m)===norm(name)||x.m.split(" / ").some(p=>norm(p)===norm(name)));
+      PRICES["sw:"+(cat?cat.m:name)]=price;n++;
+    });
+    saveCart();renderCart();$("csvMsg").textContent=`Loaded ${n} price${n===1?"":"s"} from ${f.name}`;e.target.value="";
+  };
+  rd.readAsText(f);
+});
+function csv(){
+  const q=s=>/[",]/.test(s)?`"${String(s).replace(/"/g,'""')}"`:s;
+  const L=["item,role,qty,unit_price,extended"];let sub=0;
+  ROWS.forEach(r=>{const p=priceOf(r),x=r.qty*p;sub+=x;L.push([q(r.name),q(r.role),r.qty,p,x].join(","))});
+  const d=+CART.disc||0;L.push(`subtotal,,,,${sub}`);if(d)L.push(`discount ${d}%,,,,-${sub*d/100}`);L.push(`total,,,,${sub*(1-d/100)}`);
+  return L.join("\n");
+}
+$("cCopy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(csv());$("csvMsg").textContent="CSV copied"}catch(e){$("csvMsg").textContent="Copy blocked by the browser"}});
+$("cDl").addEventListener("click",()=>{try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv()],{type:"text/csv"}));a.download="clos-encounters-bom.csv";document.body.appendChild(a);a.click();a.remove()}catch(e){$("csvMsg").textContent="Download blocked here; use Copy CSV"}});
 $("vend").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;vend=b.dataset.v;models()});
 
 function mathList(){
