@@ -76,6 +76,22 @@ h2{font-size:24px;margin:0 0 12px;font-weight:700}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 #csvMsg{font-size:14px;color:var(--mute)}
 #basis button{padding:0 14px;white-space:nowrap}
+.ohead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.olab{font-size:14px;color:var(--mute)}
+#plant button{padding:0 14px;white-space:nowrap}
+.ohead label.ck{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink);margin:0;min-height:44px}
+.ohead label.ck input{width:20px;min-height:20px;accent-color:var(--pink)}
+.otab td{vertical-align:top}
+.otab td.lk{min-width:11em}
+.otab td.lk small{display:block;color:var(--mute);font-size:13px}
+.otab td.ds input{width:6.5em}
+.otab td.md select{min-width:12em}
+.otab td.pt{min-width:20em}
+.part{display:flex;justify-content:space-between;gap:12px;font-size:15px;padding:2px 0}
+.part span:first-child{color:var(--mute)}
+.part b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.owarn{display:block;font-size:13px;font-weight:600;color:var(--pink);margin-top:4px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .chip{font:500 13px Inter,sans-serif;min-height:36px;padding:6px 10px;border-radius:18px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
@@ -227,15 +243,28 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
     </section>
   </div>
 
+  <section class="card cart" aria-label="Optics and cabling">
+    <div class="chead">
+      <h2>Optics and cabling</h2>
+      <div class="ohead">
+        <span class="olab">Fiber plant</span>
+        <div class="seg" id="plant" role="group" aria-label="Fiber plant"><button type="button" data-p="smf">Single-mode</button><button type="button" data-p="mmf">Multimode</button></div>
+        <label class="ck"><input type="checkbox" id="oNic"> Include NIC-side optics</label>
+      </div>
+    </div>
+    <div style="overflow-x:auto"><table class="otab"><thead><tr><th>Link</th><th>Distance</th><th>Media</th><th>Parts</th></tr></thead><tbody id="oBody"></tbody></table></div>
+    <p class="foot">Recommended picks the lowest-cost medium that reaches: DAC, then AEC, then fiber for your plant (SR on multimode; DR, FR, LR on single-mode). Reaches are typical values (DAC 1–3 m by speed, AEC 5–7 m, SR 50 m, DR 500 m, FR 2 km, LR 10 km); check the optic datasheet. Each switch cage gets one optic, so a breakout optic counts once. Quantities follow the cost estimator's Max scale / Target build setting.</p>
+  </section>
+
   <section class="card cart" aria-label="Cost estimator">
     <div class="chead">
       <h2>BOM and cost estimator</h2>
       <div class="seg" id="basis" role="group" aria-label="Quantity basis"><button type="button" data-b="max">Max scale</button><button type="button" data-b="target">Target build</button></div>
     </div>
     <div class="ctot"><div class="big" id="cTotal">$0</div><span id="cSub"></span></div>
-    <div style="overflow-x:auto;margin-top:10px"><table class="ctab"><thead><tr><th>Item</th><th>Role</th><th class="n">Qty</th><th class="n">Unit price ($)</th><th class="n">Extended</th><th></th></tr></thead><tbody id="cBody"></tbody><tfoot id="cFoot"></tfoot></table></div>
+    <div style="overflow-x:auto;margin-top:10px"><table class="ctab"><thead><tr><th>Item</th><th>Role</th><th class="n">Qty</th><th class="n">Rack units</th><th class="n">Unit price ($)</th><th class="n">Extended</th><th></th></tr></thead><tbody id="cBody"></tbody><tfoot id="cFoot"></tfoot></table></div>
     <div class="copts">
-      <label class="ck"><input type="checkbox" id="cOpt"> Include switch-side optics</label>
+      <label class="ck"><input type="checkbox" id="cOpt"> Include optics and cables</label>
       <div class="disc"><label for="cDisc">Discount %</label><input id="cDisc" type="number" min="0" max="100" step="0.5"></div>
       <button class="btn ghost" id="cAdd" type="button">Add line</button>
       <span class="btn ghost filebtn">Load price CSV<input id="cCsv" type="file" accept=".csv,text/csv" aria-label="Load price CSV"></span>
@@ -243,7 +272,7 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
       <button class="btn ghost" id="cDl" type="button">Download CSV</button>
       <span id="csvMsg"></span>
     </div>
-    <p class="foot">Pick a model for each role with Select in Matching models. Prices are entered by you and stay in this browser. Price CSV format is one <code>item,price</code> per line, for example <code>7060DX5-32,100000</code> or <code>800G optic,1200</code>. NIC-side optics and cables aren't included; add them as lines.</p>
+    <p class="foot">Pick a model for each role with Select in Matching models. Prices are entered by you and stay in this browser. Price CSV format is one <code>item,price</code> per line, for example <code>7060DX5-32,100000</code> or <code>800G DR (2×400G breakout),1100</code>. Optic names must match the ones shown in Optics and cabling.</p>
   </section>
 </div></div>
 
@@ -267,7 +296,8 @@ const PRESETS=[
  P("Fat-tree k=32 (3-tier)",{t:3,ldp:16,lds:400,lbh:1,lup:16,lus:400,lbu:1,sdp:16,sds:400,sbd:1,sup:16,sus:400,sbu:1,xp:32,xs:400,xb:1}),
  P("3-tier, 400G edge / 800G core",{t:3,ldp:32,lds:400,lbh:1,lup:32,lus:400,lbu:1,sdp:32,sds:800,sbd:2,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1})
 ];
-const DEF={...PRESETS[3].c,nic:8,tgt:768,sel:{leaf:"7060X6-32PE",spine:"7060X6-32PE"}};
+const DEF={...PRESETS[3].c,nic:8,tgt:768,sel:{leaf:"7060X6-32PE",spine:"7060X6-32PE"},
+  opt:{plant:"smf",nic:true,L:{host:{d:3,m:"rec"},fab:{d:50,m:"rec"},core:{d:300,m:"rec"}}}};
 const KEYS=["ldp","lds","lbh","lup","lus","lbu","sdp","sds","sbd","sup","sus","sbu","xp","xs","xb","par","nic"];
 
 /*CALC*/
@@ -377,6 +407,11 @@ const CATALOG=[
  {v:"Juniper",m:"QFX5130-48C",g:[[48,100],[8,400]],cap:8,chip:"Trident 4",f:"SFP56-DD + QSFP-DD",u:JN+"qfx5130-line-of-switches-datasheet.html"},
  {v:"Juniper",m:"QFX5120-48Y",g:[[48,25],[8,100]],cap:2,chip:"Trident 3",f:"SFP28 + QSFP28",u:"https://www.juniper.net/gb/en/products/switches/qfx-series/qfx5120-ethernet-switch-datasheet.html"}
 ];
+const RU={"7060XE7-64PS":4,"7060X6-64PE":2,"7060X6-32PE":2,"7060PX5-64E":1,"7060DX5-64S":2,"7060DX5-32":1,"7060CX5-56D8":2,"7050DX4-32S":1,"7050CX4M-48D8":2,"7050SDX4-48D8":1,"7050SX3-48YC12":1,"7050SX3-48YC8":1,
+ "N9164F-NS6":2,"N9364E-SG2":2,"N9364E-SG2X":2,"N9364E-SP2R":3,"N9164E-NS4-O":2,"N9364D-GX2A":2,"N9348D-GX2A":2,"N9332D-GX2B":1,"N9316D-GX":1,"N93600CD-GX":1,"N9348Y2C6D-SE1U":1,"N93180YC-FX3":1,
+ "QFX5250-64OE-L":2,"QFX5240-64OD / 64QD":2,"QFX5241-32OD":1,"QFX5230-64CD":2,"QFX5130-32CD":1,"QFX5130-48C":1,"QFX5120-48Y":1};
+CATALOG.forEach(x=>{x.ru=RU[x.m]||0;if(x.m==="QFX5250-64OE-L")x.ruT="2 OU (ORv3)"});
+const ruTxt=x=>x.ruT||(x.ru?x.ru+"RU":"RU n/a");
 // req: [[ports,speed],...] -> null or {lvl,spare,down,brk}
 function fitPass(g,req,allowBrk){
   const av=g.map(([n,s])=>({n,s}));let down=false,brk=false;
@@ -409,6 +444,72 @@ function reqFor(role,c){
 function matches(role,c){
   const req=reqFor(role,c);
   return CATALOG.map(m=>({m,r:matchModel(m,req)})).filter(x=>x.r).sort((a,b)=>a.r.lvl-b.r.lvl||a.r.spare-b.r.spare||a.m.cap-b.m.cap);
+}
+/* optics: media, reach, per-end parts */
+const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const MEDIA={
+  DAC:{k:"cu",d:"passive copper",r:C=>C>=1600?1:C>=400?2:3},
+  AEC:{k:"cu",d:"active copper",r:C=>C>=1600?5:7},
+  SR:{k:"mmf",d:"multimode",r:()=>50,max:800},
+  DR:{k:"smf",d:"single-mode, parallel",r:()=>500,min:100},
+  FR:{k:"smf",d:"single-mode, duplex",r:()=>2000,min:100},
+  LR:{k:"smf",d:"single-mode, duplex",r:()=>10000}
+};
+const MORDER=["DAC","AEC","SR","DR","FR","LR"];
+function recommend(d,C,plant){
+  for(const m of MORDER){
+    const x=MEDIA[m];
+    if(x.k!=="cu"&&x.k!==plant)continue;
+    if(x.max&&C>x.max||x.min&&C<x.min)continue;
+    if(d<=x.r(C))return m;
+  }
+  return plant==="mmf"?"DR":"LR";
+}
+const pname=(m,C,b)=>`${fmtG(C)} ${m}`+(b>1?` (${b}×${fmtG(C/b)} breakout)`:"");
+function ffOf(c,role){
+  const m=c.sel&&c.sel[role],x=m&&CATALOG.find(y=>y.m===m);if(!x)return "";
+  const o=/OSFP/.test(x.f),q=/QSFP/.test(x.f);
+  return o&&!q?"OSFP":q&&!o&&/QSFP-DD|QSFP56-DD/.test(x.f)&&!/QSFP28/.test(x.f)?"QSFP-DD":"";
+}
+function opticsPlanFor(c,r,n,pods){
+  const o=c.opt||{plant:"smf",nic:true,L:{}};
+  const t3=c.t===3,lay=[];
+  const hosts=n.leaf*r.hpl;
+  lay.push({id:"host",lab:"Hosts ↔ Leaf",sp:r.hostSpeed,links:hosts,
+    a:{role:"Leaf",C:c.lds,b:c.lbh,q:n.leaf*c.ldp,ff:ffOf(c,"leaf")},
+    z:{role:"NIC",C:r.hostSpeed,b:1,q:hosts,nic:true}});
+  lay.push({id:"fab",lab:"Leaf ↔ Spine",sp:r.upSpeed,links:n.leaf*r.upL,
+    a:{role:"Leaf",C:c.lus,b:c.lbu,q:n.leaf*c.lup,ff:ffOf(c,"leaf")},
+    z:{role:"Spine",C:c.sds,b:c.sbd,q:n.spine*Math.ceil((t3?r.lpp:n.leaf)*c.par/c.sbd),ff:ffOf(c,"spine")}});
+  if(t3)lay.push({id:"core",lab:"Spine ↔ Super-spine",sp:r.spUSpeed,links:n.spine*r.spUL,
+    a:{role:"Spine",C:c.sus,b:c.sbu,q:n.spine*c.sup,ff:ffOf(c,"spine")},
+    z:{role:"Super-spine",C:c.xs,b:c.xb,q:n.super*Math.ceil(pods/c.xb),ff:""}});
+  for(const L of lay){
+    const s=(o.L&&o.L[L.id])||{d:L.id==="host"?3:L.id==="fab"?50:300,m:"rec"};
+    const Cmax=Math.max(L.a.C,L.z.C);
+    L.d=+s.d||0; L.rec=recommend(L.d,Cmax,o.plant); L.m=s.m==="rec"?L.rec:s.m; L.sel=s.m;
+    const M=MEDIA[L.m], w=[];
+    if(L.d>M.r(Cmax))w.push(`${L.m} reaches about ${M.r(Cmax)} m at ${fmtG(Cmax)}, less than ${L.d} m`);
+    if(M.max&&Cmax>M.max)w.push(`${L.m} isn't generally available at ${fmtG(Cmax)}`);
+    if(M.min&&Math.min(L.a.C,L.z.C)<M.min)w.push(`${L.m} isn't made at ${fmtG(Math.min(L.a.C,L.z.C))}; use SR or LR`);
+    if(M.k!=="cu"&&M.k!==o.plant)w.push(`${L.m} needs ${M.k==="smf"?"single-mode":"multimode"} fiber, but the plant is set to ${o.plant==="smf"?"single-mode":"multimode"}`);
+    L.parts=[];
+    if(M.k==="cu"){
+      const bA=L.a.b,bZ=L.z.b;
+      let q=L.links,nm=`${fmtG(L.a.C)} ${L.m} cable`;
+      if(bA>1&&bZ===1){q=L.a.q;nm=`${fmtG(L.a.C)} to ${bA}×${fmtG(L.a.C/bA)} ${L.m} breakout cable`}
+      else if(bZ>1&&bA===1){q=L.z.q;nm=`${fmtG(L.z.C)} to ${bZ}×${fmtG(L.z.C/bZ)} ${L.m} breakout cable`}
+      else if(bA>1&&bZ>1)w.push("Copper with breakout at both ends needs a shuffle or split cables; check with the vendor");
+      if(L.a.ff&&L.z.ff&&L.a.ff!==L.z.ff)nm+=` (${L.a.ff} to ${L.z.ff})`;
+      L.parts.push({role:L.lab,name:nm,qty:q,end:"Cables"});
+    }else{
+      L.parts.push({role:`${L.lab} (${L.a.role.toLowerCase()} end)`,name:pname(L.m,L.a.C,L.a.b)+(L.a.ff?` ${L.a.ff}`:""),qty:L.a.q,end:`${L.a.role} end`});
+      if(!L.z.nic||o.nic)L.parts.push({role:`${L.lab} (${L.z.role==="NIC"?"NIC":L.z.role.toLowerCase()} end)`,name:pname(L.m,L.z.C,L.z.b)+(L.z.ff?` ${L.z.ff}`:""),qty:L.z.q,end:`${L.z.role} end`});
+      L.parts.push({role:L.lab,name:(L.m==="SR"||L.m==="DR")?"MPO fiber patch cord":"LC duplex fiber patch cord",qty:L.links,end:"Fiber runs"});
+    }
+    L.w=w;
+  }
+  return lay;
 }
 /*ENDMATCH*/
 
@@ -451,7 +552,7 @@ function render(){
   ];
   $("stats").innerHTML=st.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join("");
   $("warn").innerHTML=R.w.map(x=>`<li>${x}</li>`).join("");
-  mathList(); bom(); models(); renderCart(); draw();
+  mathList(); bom(); models(); renderOptics(); renderCart(); draw();
 }
 
 let role="leaf", vend="All";
@@ -474,7 +575,7 @@ function models(){
     const ports=m.g.map(([n,s])=>`${n}×${fmtG(s)}`).join(" + ");
     const fit=FIT[r.lvl]+(r.lvl===1||r.lvl===2?(r.spare?` · ${r.spare} ports spare`:""):"");
     return `<li class="mitem"><div class="mtop"><span class="vtag ${m.v}">${m.v}</span><a href="${m.u}" target="_blank" rel="noopener">${m.m}</a>${m.st?`<span class="stat-new">${m.st}</span>`:""}</div>
-      <div class="mspec">${ports} ${m.f} · ${fmtR(m.cap)}T · ${m.chip}</div>
+      <div class="mspec">${ports} ${m.f} · ${fmtR(m.cap)}T · ${ruTxt(m)} · ${m.chip}</div>
       <span class="fit l${r.lvl}">${fit}</span><button type="button" class="selb${S.sel&&S.sel[role]===m.m?" on":""}" data-m="${m.m}">${S.sel&&S.sel[role]===m.m?"Selected":"Select"}</button></li>`;
   }).join("");
 }
@@ -498,25 +599,25 @@ const short$=n=>n>=1e9?"$"+fmtR(n/1e9)+"B":n>=1e6?"$"+fmtR(n/1e6)+"M":n>=1e3?"$"
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const RL={leaf:"Leaf",spine:"Spine",super:"Super-spine"};
 
-function cartRows(){
+function basisCounts(){
   const b=CART.basis==="target"&&R.build?R.build:null;
-  const n={leaf:b?b.leafs:R.leafs,spine:b?b.spines:R.spines,super:b?b.supers:R.supers};
-  const pods=b?(b.pods||0):(R.pods||0);
+  return {n:{leaf:b?b.leafs:R.leafs,spine:b?b.spines:R.spines,super:b?b.supers:R.supers},pods:b?(b.pods||0):(R.pods||0)};
+}
+function cartRows(){
+  const {n,pods}=basisCounts();
   const rows=[], by={};
   for(const k of ["leaf","spine",...(S.t===3?["super"]:[])]){
     const m=S.sel&&S.sel[k];if(!m)continue;
     const cat=CATALOG.find(x=>x.m===m);
     const ok=cat&&matchModel(cat,reqFor(k,S));
-    (by[m]=by[m]||{qty:0,roles:[],bad:[]}).qty+=n[k];
+    (by[m]=by[m]||{qty:0,roles:[],bad:[],ru:cat?cat.ru:0}).qty+=n[k];
     by[m].roles.push(RL[k]); if(!ok)by[m].bad.push(RL[k]);
   }
-  for(const [m,v] of Object.entries(by))rows.push({key:"sw:"+m,name:m,role:v.roles.join(" + "),qty:v.qty,bad:v.bad});
+  for(const [m,v] of Object.entries(by))rows.push({key:"sw:"+m,name:m,role:v.roles.join(" + "),qty:v.qty,bad:v.bad,ru:v.ru});
   if(CART.optics){
-    const o={},add=(s,q)=>{if(q>0)o[s]=(o[s]||0)+q};
-    add(S.lds,n.leaf*S.ldp);add(S.lus,n.leaf*S.lup);
-    if(S.t===2)add(S.sds,n.spine*Math.ceil(n.leaf*S.par/S.sbd));
-    else{add(S.sds,n.spine*Math.ceil(R.lpp*S.par/S.sbd));add(S.sus,n.spine*S.sup);add(S.xs,n.super*Math.ceil(pods/S.xb))}
-    Object.keys(o).map(Number).sort((a,b)=>b-a).forEach(s=>rows.push({key:"opt:"+s,name:`${fmtG(s)} optic`,role:"Switch-side cages",qty:o[s]}));
+    const o={};
+    opticsPlan(n,pods).forEach(L=>L.parts.forEach(p=>{if(!p.qty)return;const k="opt:"+norm(p.name);(o[k]=o[k]||{name:p.name,qty:0,roles:[]}).qty+=p.qty;o[k].roles.push(p.role)}));
+    Object.entries(o).forEach(([k,v])=>rows.push({key:k,name:v.name,role:v.roles.join(", "),qty:v.qty}));
   }
   LINES.forEach((l,i)=>rows.push({key:"cl:"+i,custom:true,name:l.name,role:"Custom",qty:l.qty}));
   return rows;
@@ -534,18 +635,41 @@ function renderCart(){
     const p=priceOf(r)||"";
     const nm=r.custom?`<td class="nm"><input data-i="${i}" data-f="name" value="${esc(r.name)}" aria-label="Item name"></td>`:`<td><b>${esc(r.name)}</b>${r.bad&&r.bad.length?`<span class="warn-tag">Doesn't fit current ${r.bad.join("/").toLowerCase()} ports</span>`:""}</td>`;
     const q=r.custom?`<td class="n q"><input data-i="${i}" data-f="qty" type="number" min="0" value="${r.qty}" aria-label="Quantity"></td>`:`<td class="n">${fmt(r.qty)}</td>`;
-    return `<tr>${nm}<td>${r.role}</td>${q}<td class="n p"><input data-i="${i}" data-f="price" type="number" min="0" step="any" value="${p}" placeholder="0" aria-label="Unit price for ${esc(r.name)}"></td><td class="n" id="ext${i}"></td><td>${r.custom?`<button type="button" class="xbtn" data-x="${i}" aria-label="Remove line">×</button>`:""}</td></tr>`;
-  }).join(""):`<tr><td colspan="6" class="mempty">Nothing selected yet. Use Select on a model in Matching models for each role.</td></tr>`;
+    return `<tr>${nm}<td>${r.role}</td>${q}<td class="n">${r.ru?fmt(r.ru*r.qty):""}</td><td class="n p"><input data-i="${i}" data-f="price" type="number" min="0" step="any" value="${p}" placeholder="0" aria-label="Unit price for ${esc(r.name)}"></td><td class="n" id="ext${i}"></td><td>${r.custom?`<button type="button" class="xbtn" data-x="${i}" aria-label="Remove line">×</button>`:""}</td></tr>`;
+  }).join(""):`<tr><td colspan="7" class="mempty">Nothing selected yet. Use Select on a model in Matching models for each role.</td></tr>`;
   totals();
 }
 function totals(){
-  let sub=0,sw=0;
-  ROWS.forEach((r,i)=>{const e=r.qty*priceOf(r);sub+=e;if(r.key.startsWith("sw:"))sw+=r.qty;const c=$("ext"+i);if(c)c.textContent=e?money(e):"–"});
+  let sub=0,sw=0,ru=0;
+  ROWS.forEach((r,i)=>{const e=r.qty*priceOf(r);sub+=e;if(r.key.startsWith("sw:")){sw+=r.qty;ru+=(r.ru||0)*r.qty}const c=$("ext"+i);if(c)c.textContent=e?money(e):"–"});
   const d=Math.min(100,Math.max(0,+CART.disc||0)), disc=sub*d/100, tot=sub-disc;
-  $("cFoot").innerHTML=`<tr><td colspan="4">Subtotal</td><td class="n">${money(sub)}</td><td></td></tr>`+(d?`<tr><td colspan="4">Discount ${fmtR(d)}%</td><td class="n">−${money(disc)}</td><td></td></tr>`:"")+`<tr class="g"><td colspan="4">Total</td><td class="n">${money(tot)}</td><td></td></tr>`;
+  $("cFoot").innerHTML=`<tr><td colspan="5">Subtotal</td><td class="n">${money(sub)}</td><td></td></tr>`+(d?`<tr><td colspan="5">Discount ${fmtR(d)}%</td><td class="n">−${money(disc)}</td><td></td></tr>`:"")+`<tr class="g"><td colspan="5">Total</td><td class="n">${money(tot)}</td><td></td></tr>`;
   $("cTotal").textContent=short$(tot);
-  $("cSub").textContent=`${fmt(sw)} switches · ${CART.basis==="target"&&R.build?fmt(S.tgt)+" host target":"max scale, "+fmt(R.hosts)+" hosts"}${R.hosts&&tot?` · ${money(tot/(CART.basis==="target"&&R.build?S.tgt:R.hosts))} per host port`:""}`;
+  $("cSub").textContent=`${fmt(sw)} switches, ${fmt(ru)} RU · ${CART.basis==="target"&&R.build?fmt(S.tgt)+" host target":"max scale, "+fmt(R.hosts)+" hosts"}${R.hosts&&tot?` · ${money(tot/(CART.basis==="target"&&R.build?S.tgt:R.hosts))} per host port`:""}`;
 }
+const opticsPlan=(n,pods)=>opticsPlanFor(S,R,n,pods);
+function renderOptics(){
+  if(!R)return;
+  const o=S.opt;
+  document.querySelectorAll("#plant button").forEach(b=>b.classList.toggle("on",b.dataset.p===o.plant));
+  $("oNic").checked=!!o.nic;
+  const {n,pods}=basisCounts();
+  $("oBody").innerHTML=opticsPlan(n,pods).map(L=>{
+    const opts=[`<option value="rec"${L.sel==="rec"?" selected":""}>Recommended: ${L.rec}</option>`].concat(MORDER.map(m=>`<option value="${m}"${L.sel===m?" selected":""}>${m} · ${MEDIA[m].d}, ≤${MEDIA[m].r(Math.max(L.a.C,L.z.C))>=1000?MEDIA[m].r(Math.max(L.a.C,L.z.C))/1000+" km":MEDIA[m].r(Math.max(L.a.C,L.z.C))+" m"}</option>`)).join("");
+    return `<tr><td class="lk"><b>${L.lab}</b><small>${fmt(L.links)} links × ${fmtG(L.sp)}</small></td>
+      <td class="ds"><label for="d-${L.id}" class="sr">Distance in meters</label><input id="d-${L.id}" data-l="${L.id}" type="number" min="0" step="1" value="${L.d}"> m</td>
+      <td class="md"><select id="m-${L.id}" data-l="${L.id}" aria-label="Media for ${L.lab}">${opts}</select></td>
+      <td class="pt">${L.parts.map(p=>`<div class="part"><span>${p.end}: ${esc(p.name)}</span><b>${fmt(p.qty)}</b></div>`).join("")}${L.z.nic&&!o.nic&&MEDIA[L.m].k!=="cu"?`<div class="part"><span>NIC end: not included</span><b>–</b></div>`:""}${L.w.map(x=>`<span class="owarn">${x}</span>`).join("")}</td></tr>`;
+  }).join("");
+}
+$("oBody").addEventListener("change",e=>{
+  const t=e.target,id=t.dataset.l;if(!id)return;
+  const L={...(S.opt.L||{})};L[id]={...(L[id]||{d:3,m:"rec"})};
+  if(t.tagName==="SELECT")L[id].m=t.value;else L[id].d=Math.max(0,+t.value||0);
+  S.opt={...S.opt,L};save();renderOptics();renderCart();
+});
+$("plant").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.opt={...S.opt,plant:b.dataset.p};save();renderOptics();renderCart()});
+$("oNic").addEventListener("change",e=>{S.opt={...S.opt,nic:e.target.checked};save();renderOptics();renderCart()});
 $("cBody").addEventListener("input",e=>{
   const t=e.target,i=+t.dataset.i,r=ROWS[i];if(!r)return;
   if(r.custom){const l=LINES[+r.key.slice(3)];if(t.dataset.f==="name")l.name=t.value;else if(t.dataset.f==="qty"){l.qty=Math.max(0,+t.value||0);r.qty=l.qty}else l.price=Math.max(0,+t.value||0)}
@@ -553,7 +677,7 @@ $("cBody").addEventListener("input",e=>{
   saveCart();totals();
 });
 $("cBody").addEventListener("click",e=>{const b=e.target.closest(".xbtn");if(!b)return;LINES.splice(+ROWS[+b.dataset.x].key.slice(3),1);saveCart();renderCart()});
-$("basis").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;CART.basis=b.dataset.b;saveCart();renderCart()});
+$("basis").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;CART.basis=b.dataset.b;saveCart();renderOptics();renderCart()});
 $("cOpt").addEventListener("change",e=>{CART.optics=e.target.checked;saveCart();renderCart()});
 $("cDisc").addEventListener("input",e=>{CART.disc=+e.target.value||0;saveCart();totals()});
 $("cAdd").addEventListener("click",()=>{LINES.push({name:"Support / services",qty:1,price:0});saveCart();renderCart()});
@@ -566,11 +690,10 @@ $("cCsv").addEventListener("change",e=>{
       const c=line.split(",");if(c.length<2)return;
       const name=c[0].trim().replace(/^"|"$/g,""), price=parseFloat(c.slice(1).join("").replace(/[$\s"]/g,""));
       if(!name||!Number.isFinite(price))return;
-      const om=name.match(/^(\d+(?:\.\d+)?)\s*(g|t)\b.*optic/i);
-      if(om){PRICES["opt:"+Math.round(+om[1]*(om[2].toLowerCase()==="t"?1000:1))]=price;n++;return}
-      const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^(dcs|n9k|n9kc)/,"");
-      const cat=CATALOG.find(x=>norm(x.m)===norm(name)||x.m.split(" / ").some(p=>norm(p)===norm(name)));
-      PRICES["sw:"+(cat?cat.m:name)]=price;n++;
+      const pn=s=>norm(s).replace(/^(dcs|n9kc|n9k)/,"");
+      const cat=CATALOG.find(x=>pn(x.m)===pn(name)||x.m.split(" / ").some(p=>pn(p)===pn(name)));
+      if(cat)PRICES["sw:"+cat.m]=price;else{PRICES["opt:"+norm(name)]=price;PRICES["sw:"+name]=price}
+      n++;
     });
     saveCart();renderCart();$("csvMsg").textContent=`Loaded ${n} price${n===1?"":"s"} from ${f.name}`;e.target.value="";
   };
@@ -625,6 +748,11 @@ function bom(){
     [`Host cables (${R.hostSpeed}G)`,R.hosts,b&&b.hosts],
     [`Servers (${S.nic} NICs)`,R.servers,b&&b.servers]
   ];
+  const ruR=k=>{const m=S.sel&&S.sel[k],x=m&&CATALOG.find(y=>y.m===m);return x?x.ru:0};
+  if(["leaf","spine","super"].some(k=>ruR(k))){
+    const tot=(l,s,x)=>l*ruR("leaf")+s*ruR("spine")+(t3?x*ruR("super"):0);
+    rows.push(["Rack units (selected models)",tot(R.leafs,R.spines,R.supers),b&&tot(b.leafs,b.spines,b.supers)]);
+  }
   $("bom").innerHTML=rows.map(([a,m,t])=>`<tr><td>${a}</td><td class="n">${fmt(m)}</td>${T?`<td class="n">${fmt(t)}</td>`:""}</tr>`).join("");
 }
 
