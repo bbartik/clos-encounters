@@ -85,6 +85,7 @@ h2{font-size:24px;margin:0 0 12px;font-weight:700}
 .otab td.lk{min-width:11em}
 .otab td.lk small{display:block;color:var(--mute);font-size:13px}
 .otab td.ds input{width:6.5em}
+.otab select.att{margin-top:8px;min-height:40px;padding:6px 8px;width:auto}
 .otab td.md select{min-width:12em}
 .otab td.pt{min-width:20em}
 .part{display:flex;justify-content:space-between;gap:12px;font-size:15px;padding:2px 0}
@@ -135,6 +136,9 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .foot{font-size:13px;color:var(--mute);margin-top:16px}
 .only3{display:none}
+#railBox{display:none}
+.rail #railBox{display:block}
+#fab{margin-bottom:4px}
 .t3 .only3{display:block}
 @media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"out" "ctl" "mod";grid-template-rows:auto}.lower{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.fig{min-height:300px}.res{grid-template-columns:minmax(0,1fr)}.res .sub{padding:0}table{font-size:13px}th,td{padding:6px 4px}}
@@ -156,6 +160,13 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
       <div class="chips" id="presets"></div>
 
       <fieldset><legend>Topology</legend>
+        <div class="seg" id="fab" role="group" aria-label="Fabric type"><button type="button" data-f="rail">Rail-optimized</button><button type="button" data-f="clos">Standard Clos</button></div>
+        <div id="railBox">
+          <div class="grp">Spine connectivity</div>
+          <div class="seg" id="rmode" role="group" aria-label="Spine connectivity"><button type="button" data-r="mesh">Full mesh</button><button type="button" data-r="plane">Rail planes</button></div>
+          <p class="hint" id="railHint"></p>
+        </div>
+        <div class="grp">Tiers</div>
         <div class="seg" id="tiers"><button type="button" data-t="2">2-tier</button><button type="button" data-t="3">3-tier (super-spine)</button></div>
       </fieldset>
 
@@ -208,7 +219,7 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 
       <fieldset><legend>Build</legend>
         <div class="row">
-          <div><label for="nic">NICs per server</label><input id="nic" type="number" min="1" max="16"></div>
+          <div><label for="nic" id="nicLab">NICs per server</label><input id="nic" type="number" min="1" max="16"></div>
           <div><label for="tgt">Target host ports</label><input id="tgt" type="number" min="0" placeholder="optional"></div>
         </div>
       </fieldset>
@@ -253,7 +264,7 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
       </div>
     </div>
     <div style="overflow-x:auto"><table class="otab"><thead><tr><th>Link</th><th>Distance</th><th>Media</th><th>Parts</th></tr></thead><tbody id="oBody"></tbody></table></div>
-    <p class="foot">Recommended picks the lowest-cost medium that reaches: DAC, then AEC, then fiber for your plant (SR on multimode; DR, FR, LR on single-mode). Reaches are typical values (DAC 1–3 m by speed, AEC 5–7 m, SR 50 m, DR 500 m, FR 2 km, LR 10 km); check the optic datasheet. Each switch cage gets one optic, so a breakout optic counts once. Quantities follow the cost estimator's Max scale / Target build setting.</p>
+    <p class="foot">Recommended picks the lowest-cost medium that reaches: DAC, then AEC, then fiber for your plant. AOC (up to about 30 m) is available to pick but not auto-recommended, since large fabrics usually standardize on transceivers and structured fiber (SR on multimode; DR, FR, LR on single-mode). Reaches are typical values (DAC 1–3 m by speed, AEC 5–7 m, SR 50 m, DR 500 m, FR 2 km, LR 10 km); check the optic datasheet. Each switch cage gets one optic, so a breakout optic counts once. Quantities follow the cost estimator's Max scale / Target build setting.</p>
   </section>
 
   <section class="card cart" aria-label="Cost estimator">
@@ -281,9 +292,11 @@ td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 const SPEEDS=[10,25,50,100,200,400,800,1600];
 const BK=[1,2,4,8];
 const PAR=[1,2,4];
-const base={t:2,par:1,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1};
+const base={fab:"clos",rmode:"mesh",t:2,par:1,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1};
 const P=(n,c)=>({n,c:{...base,...c}});
 const PRESETS=[
+ P("AI rail-optimized · 32×800G, 8 rails",{fab:"rail",rmode:"mesh",ldp:16,lds:800,lbh:1,lup:16,lus:800,lbu:2,sdp:32,sds:800,sbd:2}),
+ P("AI rail planes · 64×800G, 8 rails",{fab:"rail",rmode:"plane",ldp:32,lds:800,lbh:1,lup:32,lus:800,lbu:2,sdp:64,sds:800,sbd:2}),
  P("12.8T · 32×400G",{ldp:16,lds:400,lbh:1,lup:16,lus:400,lbu:1,sdp:32,sds:400,sbd:1}),
  P("25.6T · 64×400G",{ldp:32,lds:400,lbh:1,lup:32,lus:400,lbu:1,sdp:64,sds:400,sbd:1}),
  P("25.6T · 32×800G",{ldp:16,lds:800,lbh:1,lup:16,lus:800,lbu:1,sdp:32,sds:800,sbd:1}),
@@ -296,12 +309,13 @@ const PRESETS=[
  P("Fat-tree k=32 (3-tier)",{t:3,ldp:16,lds:400,lbh:1,lup:16,lus:400,lbu:1,sdp:16,sds:400,sbd:1,sup:16,sus:400,sbu:1,xp:32,xs:400,xb:1}),
  P("3-tier, 400G edge / 800G core",{t:3,ldp:32,lds:400,lbh:1,lup:32,lus:400,lbu:1,sdp:32,sds:800,sbd:2,sup:32,sus:800,sbu:1,xp:64,xs:800,xb:1})
 ];
-const DEF={...PRESETS[3].c,nic:8,tgt:768,sel:{leaf:"7060X6-32PE",spine:"7060X6-32PE"},
-  opt:{plant:"smf",nic:true,L:{host:{d:3,m:"rec"},fab:{d:50,m:"rec"},core:{d:300,m:"rec"}}}};
+const DEF={...PRESETS[0].c,nic:8,tgt:768,sel:{leaf:"7060X6-32PE",spine:"7060X6-32PE"},
+  opt:{plant:"smf",nic:true,L:{host:{d:30,m:"rec"},fab:{d:50,m:"rec"},core:{d:300,m:"rec"}}}};
 const KEYS=["ldp","lds","lbh","lup","lus","lbu","sdp","sds","sbd","sup","sus","sbu","xp","xs","xb","par","nic"];
 
 /*CALC*/
-function calc(c){
+function calcFab(c,m){
+  m=m||1;
   const w=[], t3=c.t===3;
   const hostSpeed=c.lds/c.lbh, upSpeed=c.lus/c.lbu, spDSpeed=c.sds/c.sbd;
   const hpl=c.ldp*c.lbh, upL=c.lup*c.lbu, spDL=c.sdp*c.sbd, p=c.par;
@@ -315,7 +329,7 @@ function calc(c){
   r.leafCap=downBW+upBW;
   r.spineCap=c.sdp*c.sds+(t3?c.sup*c.sus:0);
   if(!t3){
-    r.leafs=Math.floor(spDL/p); r.spines=spg; r.supers=0;
+    r.leafs=Math.floor(Math.floor(spDL/p)/m)*m; r.spines=spg; r.supers=0;
     r.lsLinks=r.leafs*upL; r.ssLinks=0;
     r.spineCages=r.spines*Math.ceil(r.leafs*p/c.sbd); r.superCages=0;
   }else{
@@ -323,7 +337,7 @@ function calc(c){
     if(spUSpeed!==xSpeed) w.push(`Spine–super-spine speed mismatch: spine uplinks run ${spUSpeed}G, super-spine ports run ${xSpeed}G.`);
     if(xSpeed<10||spUSpeed<10) w.push("A breakout below 10G per port isn't realistic.");
     Object.assign(r,{spUSpeed,spUL,xSpeed,xL});
-    r.lpp=Math.floor(spDL/p); r.spp=spg; r.planes=spg; r.spPlane=spUL; r.pods=xL;
+    r.lpp=Math.floor(Math.floor(spDL/p)/m)*m; r.spp=spg; r.planes=spg; r.spPlane=spUL; r.pods=xL;
     r.leafs=r.pods*r.lpp; r.spines=r.pods*r.spp; r.supers=r.planes*r.spPlane;
     r.lsLinks=r.leafs*upL; r.ssLinks=r.spines*spUL;
     r.taper=(r.lpp*p*spDSpeed)/(spUL*spUSpeed);
@@ -344,7 +358,7 @@ function calc(c){
   r.fibers=r.lsLinks+r.ssLinks;
   if(c.tgt>0){
     const b={};
-    b.leafs=Math.ceil(c.tgt/hpl);
+    b.leafs=Math.ceil(Math.ceil(c.tgt/hpl)/m)*m;
     if(!t3){
       b.fits=b.leafs<=r.leafs; b.spines=r.spines; b.supers=0;
       b.ssLinks=0; b.spineCages=b.spines*Math.ceil(b.leafs*p/c.sbd); b.superCages=0;
@@ -361,6 +375,33 @@ function calc(c){
     if(!b.fits) w.push(`Target of ${fmt(c.tgt)} exceeds this design's max of ${fmt(r.hosts)}. ${t3?"Use higher-radix switches or more breakout.":"Go 3-tier, add breakout, or use a higher-radix spine."}`);
     r.build=b;
   }
+  return r;
+}
+const SCALE=["leafs","spines","supers","lsLinks","ssLinks","spineCages","superCages","hosts","switches","hostBW","bisect","leafCages","cages","fibers"];
+function calc(c){
+  if(c.fab!=="rail")return calcFab(c,1);
+  const Rr=Math.max(1,c.nic), plane=c.rmode==="plane";
+  let r;
+  if(!plane){
+    r=calcFab(c,Rr);
+    const raw=Math.floor(r.spDL/r.p);
+    if(raw%Rr&&raw>=Rr)r.w.push(`Rounded down to whole scalable units: ${raw} leafs per ${c.t===3?"pod":"fabric"} → ${Math.floor(raw/Rr)*Rr} (${Rr} leafs per SU, one per rail).`);
+    if(raw<Rr)r.w.push(`A scalable unit needs ${Rr} leafs (one per rail), but the spine only supports ${raw}. Use rail planes, more breakout or a bigger spine.`);
+    r.pp=null; r.su=r.leafs/Rr;
+    if(r.build)r.build.su=r.build.leafs/Rr;
+  }else{
+    const pc={...c,tgt:c.tgt>0?Math.ceil(c.tgt/Rr):0};
+    r=calcFab(pc,1);
+    r.pp={leafs:r.leafs,spines:r.spines,supers:r.supers,hosts:r.hosts};
+    r.su=r.leafs;
+    SCALE.forEach(k=>r[k]*=Rr);
+    if(r.build){const b=r.build;b.su=b.leafs;["leafs","spines","supers","lsLinks","ssLinks","spineCages","superCages","hosts","switches","leafCages","cages","fibers"].forEach(k=>b[k]*=Rr)}
+    r.w=r.w.filter(x=>!/^Target of/.test(x));
+    if(r.build&&!r.build.fits)r.w.push(`Target of ${fmt(c.tgt)} exceeds this design's max of ${fmt(r.hosts)} GPU ports. Use higher-radix switches, more breakout or 3-tier planes.`);
+  }
+  r.rail={R:Rr,plane};
+  r.servers=r.su*r.hpl;
+  if(r.build)r.build.servers=r.build.su*r.hpl;
   return r;
 }
 function fmt(n){return Number.isFinite(n)?Math.round(n).toLocaleString("en-US"):"–"}
@@ -453,13 +494,14 @@ const MEDIA={
   SR:{k:"mmf",d:"multimode",r:()=>50,max:800},
   DR:{k:"smf",d:"single-mode, parallel",r:()=>500,min:100},
   FR:{k:"smf",d:"single-mode, duplex",r:()=>2000,min:100},
-  LR:{k:"smf",d:"single-mode, duplex",r:()=>10000}
+  LR:{k:"smf",d:"single-mode, duplex",r:()=>10000},
+  AOC:{k:"aoc",d:"active optical cable",r:()=>30}
 };
-const MORDER=["DAC","AEC","SR","DR","FR","LR"];
+const MORDER=["DAC","AEC","AOC","SR","DR","FR","LR"];
 function recommend(d,C,plant){
   for(const m of MORDER){
     const x=MEDIA[m];
-    if(x.k!=="cu"&&x.k!==plant)continue;
+    if(x.k==="aoc"||x.k!=="cu"&&x.k!==plant)continue;
     if(x.max&&C>x.max||x.min&&C<x.min)continue;
     if(d<=x.r(C))return m;
   }
@@ -474,27 +516,29 @@ function ffOf(c,role){
 function opticsPlanFor(c,r,n,pods){
   const o=c.opt||{plant:"smf",nic:true,L:{}};
   const t3=c.t===3,lay=[];
-  const hosts=n.leaf*r.hpl;
-  lay.push({id:"host",lab:"Hosts ↔ Leaf",sp:r.hostSpeed,links:hosts,
+  const hosts=n.leaf*r.hpl, rail=c.fab==="rail";
+  lay.push({id:"host",lab:rail?"Hosts ↔ Leaf (rail-optimized)":"Hosts ↔ Leaf",rail,sp:r.hostSpeed,links:hosts,
     a:{role:"Leaf",C:c.lds,b:c.lbh,q:n.leaf*c.ldp,ff:ffOf(c,"leaf")},
     z:{role:"NIC",C:r.hostSpeed,b:1,q:hosts,nic:true}});
   lay.push({id:"fab",lab:"Leaf ↔ Spine",sp:r.upSpeed,links:n.leaf*r.upL,
     a:{role:"Leaf",C:c.lus,b:c.lbu,q:n.leaf*c.lup,ff:ffOf(c,"leaf")},
-    z:{role:"Spine",C:c.sds,b:c.sbd,q:n.spine*Math.ceil((t3?r.lpp:n.leaf)*c.par/c.sbd),ff:ffOf(c,"spine")}});
+    z:{role:"Spine",C:c.sds,b:c.sbd,q:n.spine*Math.ceil((t3?r.lpp:(rail&&c.rmode==="plane"?n.leaf/c.nic:n.leaf))*c.par/c.sbd),ff:ffOf(c,"spine")}});
   if(t3)lay.push({id:"core",lab:"Spine ↔ Super-spine",sp:r.spUSpeed,links:n.spine*r.spUL,
     a:{role:"Spine",C:c.sus,b:c.sbu,q:n.spine*c.sup,ff:ffOf(c,"spine")},
     z:{role:"Super-spine",C:c.xs,b:c.xb,q:n.super*Math.ceil(pods/c.xb),ff:""}});
   for(const L of lay){
-    const s=(o.L&&o.L[L.id])||{d:L.id==="host"?3:L.id==="fab"?50:300,m:"rec"};
+    const s=(o.L&&o.L[L.id])||{d:L.id==="host"?(rail?30:3):L.id==="fab"?50:300,m:"rec"};
     const Cmax=Math.max(L.a.C,L.z.C);
     L.d=+s.d||0; L.rec=recommend(L.d,Cmax,o.plant); L.m=s.m==="rec"?L.rec:s.m; L.sel=s.m;
     const M=MEDIA[L.m], w=[];
     if(L.d>M.r(Cmax))w.push(`${L.m} reaches about ${M.r(Cmax)} m at ${fmtG(Cmax)}, less than ${L.d} m`);
     if(M.max&&Cmax>M.max)w.push(`${L.m} isn't generally available at ${fmtG(Cmax)}`);
     if(M.min&&Math.min(L.a.C,L.z.C)<M.min)w.push(`${L.m} isn't made at ${fmtG(Math.min(L.a.C,L.z.C))}; use SR or LR`);
-    if(M.k!=="cu"&&M.k!==o.plant)w.push(`${L.m} needs ${M.k==="smf"?"single-mode":"multimode"} fiber, but the plant is set to ${o.plant==="smf"?"single-mode":"multimode"}`);
+    if(L.rail&&n.leaf%c.nic)w.push(`Rail-optimized: ${fmt(n.leaf)} leafs isn't a multiple of ${c.nic} rails (NICs per server)`);
+    if(L.rail&&M.k==="cu")w.push("Rail-optimized: copper only works if every rail leaf is within reach of every server; check the farthest NIC");
+    if(M.k!=="cu"&&M.k!=="aoc"&&M.k!==o.plant)w.push(`${L.m} needs ${M.k==="smf"?"single-mode":"multimode"} fiber, but the plant is set to ${o.plant==="smf"?"single-mode":"multimode"}`);
     L.parts=[];
-    if(M.k==="cu"){
+    if(M.k==="cu"||M.k==="aoc"){
       const bA=L.a.b,bZ=L.z.b;
       let q=L.links,nm=`${fmtG(L.a.C)} ${L.m} cable`;
       if(bA>1&&bZ===1){q=L.a.q;nm=`${fmtG(L.a.C)} to ${bA}×${fmtG(L.a.C/bA)} ${L.m} breakout cable`}
@@ -528,6 +572,11 @@ function toForm(){
   $("tgt").value=S.tgt||"";
   document.querySelectorAll("#tiers button").forEach(b=>b.classList.toggle("on",+b.dataset.t===S.t));
   $("root").classList.toggle("t3",S.t===3);
+  $("root").classList.toggle("rail",S.fab==="rail");
+  document.querySelectorAll("#fab button").forEach(b=>b.classList.toggle("on",b.dataset.f===S.fab));
+  document.querySelectorAll("#rmode button").forEach(b=>b.classList.toggle("on",b.dataset.r===S.rmode));
+  $("nicLab").textContent=S.fab==="rail"?"NICs per server (rails)":"NICs per server";
+  $("railHint").textContent=S.rmode==="plane"?"Each rail has its own spines: the fabric is one Clos per rail. Cross-rail traffic goes over NVLink/PXN inside the server. Scales "+S.nic+"× further in the same tiers.":"Every leaf connects to every spine, so any GPU reaches any other over the fabric. Leafs come in scalable units of one leaf per rail.";
 }
 function fromForm(){
   KEYS.forEach(k=>S[k]=Math.max(1,parseInt($(k).value)||1));
@@ -542,13 +591,16 @@ function render(){
   $("spineBox").innerHTML=`Box: ${S.sdp}×${S.sds}G${S.t===3?` + ${S.sup}×${S.sus}G`:""} = <b>${fmtG(R.spineCap)}</b> · ${R.spDL}×${R.spDSpeed}G to leafs${S.t===3?`, ${R.spUL}×${R.spUSpeed}G up`:""}`;
   document.querySelectorAll("#presets .chip").forEach(b=>{const c=PRESETS[b.dataset.i].c;const keys=c.t===3?Object.keys(c):Object.keys(c).filter(k=>!["sup","sus","sbu","xp","xs","xb"].includes(k));b.classList.toggle("on",keys.every(k=>S[k]===c[k]))});
   $("bigN").textContent=fmt(R.hosts);
-  $("bigSub").innerHTML=`<b>host ports × ${R.hostSpeed}G</b> at max scale<br>${bw(R.hostBW)} · ${R.os<=1.001?"non-blocking at the leaf":fmtR(R.os)+":1 at the leaf"}`;
+  const RA=R.rail;
+  $("bigSub").innerHTML=RA?`<b>GPU ports × ${R.hostSpeed}G</b> at max scale<br>${fmt(R.servers)} servers × ${RA.R} rails · ${fmt(R.su)} scalable units${RA.plane?` · ${RA.R} rail planes`:""}<br>${bw(R.hostBW)} · ${R.os<=1.001?"non-blocking at the leaf":fmtR(R.os)+":1 at the leaf"}`
+    :`<b>host ports × ${R.hostSpeed}G</b> at max scale<br>${bw(R.hostBW)} · ${R.os<=1.001?"non-blocking at the leaf":fmtR(R.os)+":1 at the leaf"}`;
   const st=[
+    ...(RA?[["Scalable units",fmt(R.su)],["Servers",fmt(R.servers)]]:[]),
     ["Leafs",fmt(R.leafs)],["Spines",fmt(R.spines)],
     ...(R.t===3?[["Super-spines",fmt(R.supers)],["Pods",fmt(R.pods)]]:[]),
     ["Total switches",fmt(R.switches)],["Bisection",bw(R.bisect)],
-    ["Leaf ECMP next hops",fmt(R.upL)],["One spine lost costs",fmtR(100/Math.max(1,R.spg))+"%"],
-    [`Servers (${S.nic} NICs)`,fmt(R.servers)],["Fabric fiber runs",fmt(R.fibers)]
+    ["Leaf ECMP next hops",fmt(R.upL)],[RA&&RA.plane?"One spine lost costs (its rail)":"One spine lost costs",fmtR(100/Math.max(1,R.spg))+"%"],
+    ...(RA?[]:[[`Servers (${S.nic} NICs)`,fmt(R.servers)]]),["Fabric fiber runs",fmt(R.fibers)]
   ];
   $("stats").innerHTML=st.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join("");
   $("warn").innerHTML=R.w.map(x=>`<li>${x}</li>`).join("");
@@ -656,14 +708,16 @@ function renderOptics(){
   const {n,pods}=basisCounts();
   $("oBody").innerHTML=opticsPlan(n,pods).map(L=>{
     const opts=[`<option value="rec"${L.sel==="rec"?" selected":""}>Recommended: ${L.rec}</option>`].concat(MORDER.map(m=>`<option value="${m}"${L.sel===m?" selected":""}>${m} · ${MEDIA[m].d}, ≤${MEDIA[m].r(Math.max(L.a.C,L.z.C))>=1000?MEDIA[m].r(Math.max(L.a.C,L.z.C))/1000+" km":MEDIA[m].r(Math.max(L.a.C,L.z.C))+" m"}</option>`)).join("");
-    return `<tr><td class="lk"><b>${L.lab}</b><small>${fmt(L.links)} links × ${fmtG(L.sp)}</small></td>
+    const att=L.id==="host"?`<small>${L.rail?`Rail-optimized: each server spans ${S.nic} leafs, one per rail. Distance = farthest NIC run.`:"Top of rack: distance = longest in-rack run."}</small>`:"";
+    return `<tr><td class="lk"><b>${L.lab}</b><small>${fmt(L.links)} links × ${fmtG(L.sp)}</small>${att}</td>
       <td class="ds"><label for="d-${L.id}" class="sr">Distance in meters</label><input id="d-${L.id}" data-l="${L.id}" type="number" min="0" step="1" value="${L.d}"> m</td>
       <td class="md"><select id="m-${L.id}" data-l="${L.id}" aria-label="Media for ${L.lab}">${opts}</select></td>
       <td class="pt">${L.parts.map(p=>`<div class="part"><span>${p.end}: ${esc(p.name)}</span><b>${fmt(p.qty)}</b></div>`).join("")}${L.z.nic&&!o.nic&&MEDIA[L.m].k!=="cu"?`<div class="part"><span>NIC end: not included</span><b>–</b></div>`:""}${L.w.map(x=>`<span class="owarn">${x}</span>`).join("")}</td></tr>`;
   }).join("");
 }
 $("oBody").addEventListener("change",e=>{
-  const t=e.target,id=t.dataset.l;if(!id)return;
+  const t=e.target;
+  const id=t.dataset.l;if(!id)return;
   const L={...(S.opt.L||{})};L[id]={...(L[id]||{d:3,m:"rec"})};
   if(t.tagName==="SELECT")L[id].m=t.value;else L[id].d=Math.max(0,+t.value||0);
   S.opt={...S.opt,L};save();renderOptics();renderCart();
@@ -711,6 +765,7 @@ $("cDl").addEventListener("click",()=>{try{const a=document.createElement("a");a
 $("vend").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;vend=b.dataset.v;models()});
 
 function mathList(){
+  const RA=R.rail, V=RA&&RA.plane?R.pp:R, pl=RA&&RA.plane?" per rail plane":"";
   const L=[
     `Hosts per leaf = ${S.ldp} ports × ${S.lbh} = <code>${R.hpl} × ${R.hostSpeed}G</code>`,
     `Leaf uplinks = ${S.lup} ports × ${S.lbu} = <code>${R.upL} × ${R.upSpeed}G</code>`,
@@ -719,14 +774,21 @@ function mathList(){
     `Spine leaf-facing ports = ${S.sdp} × ${S.sbd} = <code>${R.spDL} × ${R.spDSpeed}G</code>`
   ];
   if(R.t===2){
-    L.push(`Max leafs = ${R.spDL} ÷ ${R.p} = <code>${R.leafs}</code>`);
-    L.push(`Host ports = ${R.leafs} leafs × ${R.hpl} = <code>${fmt(R.hosts)}</code>`);
+    L.push(`Max leafs${pl} = ${R.spDL} ÷ ${R.p}${RA&&!RA.plane?`, rounded to whole SUs of ${RA.R}`:""} = <code>${V.leafs}</code>`);
+    L.push(`${RA?"GPU ports":"Host ports"}${pl} = ${V.leafs} leafs × ${R.hpl} = <code>${fmt(V.hosts)}</code>`);
   }else{
     L.push(`Leafs per pod = ${R.spDL} ÷ ${R.p} = <code>${R.lpp}</code>`);
     L.push(`Spine uplinks = ${S.sup} × ${S.sbu} = <code>${R.spUL} × ${R.spUSpeed}G</code>, taper <code>${fmtR(R.taper)}:1</code>`);
     L.push(`Planes = spines per pod = <code>${R.planes}</code>; ${R.spUL} super-spines per plane → <code>${fmt(R.supers)}</code>`);
     L.push(`Pods = super-spine ports = ${S.xp} × ${S.xb} = <code>${R.pods}</code>`);
-    L.push(`Host ports = ${R.pods} pods × ${R.lpp} leafs × ${R.hpl} = <code>${fmt(R.hosts)}</code>`);
+    L.push(`${RA?"GPU ports":"Host ports"}${pl} = ${R.pods} pods × ${R.lpp} leafs × ${R.hpl} = <code>${fmt(V.hosts)}</code>`);
+  }
+  if(RA){
+    if(RA.plane){
+      L.push(`Rail planes = rails = <code>${RA.R}</code>; each rail is its own fabric, so totals are ×${RA.R}: <code>${fmt(R.leafs)}</code> leafs, <code>${fmt(R.spines)}</code> spines${R.t===3?`, <code>${fmt(R.supers)}</code> super-spines`:""}`);
+      L.push(`Scalable units = leafs per plane = <code>${fmt(R.su)}</code> (one leaf per rail in each SU)`);
+    }else L.push(`Scalable units = ${fmt(R.leafs)} leafs ÷ ${RA.R} rails = <code>${fmt(R.su)}</code>`);
+    L.push(`Servers = ${fmt(R.su)} SUs × ${R.hpl} servers per SU = <code>${fmt(R.servers)}</code>; GPUs = ${fmt(R.servers)} × ${RA.R} = <code>${fmt(R.hosts)}</code>`);
   }
   L.push(`Host bandwidth = ${fmt(R.hosts)} × ${R.hostSpeed}G = <code>${bw(R.hostBW)}</code>`);
   $("math").innerHTML=L.map(x=>`<li>${x}</li>`).join("");
@@ -735,8 +797,9 @@ function mathList(){
 function bom(){
   const b=R.build, T=!!b, t3=R.t===3;
   $("bomT").style.display=T?"":"none";
-  $("bomT").textContent=T?`${fmt(S.tgt)} hosts`:"";
+  $("bomT").textContent=T?`${fmt(S.tgt)} ${R.rail?"GPU ports":"hosts"}`:"";
   const rows=[
+    ...(R.rail?[["Scalable units",R.su,b&&b.su]]:[]),
     ["Leaf switches",R.leafs,b&&b.leafs],["Spine switches",R.spines,b&&b.spines],
     ...(t3?[["Super-spine switches",R.supers,b&&b.supers]]:[]),
     ["Total switches",R.switches,b&&b.switches],
@@ -766,7 +829,27 @@ function draw(){
   const label=(x,y,t,a)=>`<text x="${x}" y="${y}" text-anchor="${a||"start"}">${t}</text>`;
   const spread=(n,x0,x1)=>Array.from({length:n},(_,i)=>n===1?(x0+x1)/2:x0+(x1-x0)*i/(n-1));
   const PL=["var(--pink)","var(--teal)","var(--amber)","var(--green)"];
-  if(R.t===2){
+  const RC=["#ff2e7e","#0a90b8","#e09a00","#0b8a50","#6b5bd6","#e5533d","#2b7de9","#8a6d3b"];
+  if(R.rail&&R.t===2){
+    const Rr=R.rail.R,plane=R.rail.plane;
+    const yS=H*.17,yL=H*.53,yV=H*.83;
+    const nR=Math.max(1,Math.min(Rr,narrow?4:8)), nSU=Math.max(1,Math.min(R.su,narrow?1:2)), more=R.su>nSU;
+    const gap=narrow?0:48, blkW=(W-padL-padR-gap*(nSU-1)-(more?84:0))/nSU;
+    const blocks=Array.from({length:nSU},(_,b)=>{const x0=padL+b*(blkW+gap);return {x0,l:spread(nR,x0+blkW*.07,x0+blkW*.93),v:spread(Math.max(1,Math.min(R.hpl,narrow?3:4)),x0+blkW*.12,x0+blkW*.88)}});
+    const wL=Math.min(22,blkW/nR*.6), wV=Math.min(40,blkW/6);
+    let sp=[];
+    if(plane){const k=Math.max(1,Math.min(R.spg,nR>4?1:2));for(let i=0;i<nR;i++)for(let j=0;j<k;j++)sp.push({r:i});const xs=spread(sp.length,padL+30,W-padR-30);sp.forEach((q,i)=>q.x=xs[i])}
+    else{const xs=spread(Math.max(1,Math.min(R.spines,narrow?6:12)),padL+30,W-padR-30);sp=xs.map(x=>({x,r:-1}))}
+    const wS=Math.min(28,(W-60)/sp.length*.6);
+    blocks.forEach(B=>B.l.forEach((lx,i)=>sp.forEach(q=>{if(q.r<0||q.r===i)o+=ln(lx,yL-7,q.x,yS+7,0,q.r<0?"var(--ink)":RC[i%8],q.r<0?.16:.6)})));
+    blocks.forEach(B=>B.v.forEach(vx=>B.l.forEach((lx,i)=>o+=ln(vx,yV-9,lx,yL+7,0,RC[i%8],.75))));
+    sp.forEach(q=>o+=node(q.x,yS,wS,q.r<0?"var(--ink)":RC[q.r%8]));
+    blocks.forEach(B=>{B.l.forEach((lx,i)=>o+=node(lx,yL,wL,RC[i%8]));B.v.forEach(vx=>o+=`<rect x="${vx-wV/2}" y="${yV-9}" width="${wV}" height="18" rx="3" fill="var(--ink)"/>`)});
+    blocks.forEach((B,b)=>o+=label(B.x0,yL-18,narrow?`SU 1 of ${fmt(R.su)}`:`SU ${b+1}: ${Rr} leafs, one per rail`));
+    if(more&&!narrow)o+=label(W-padR,yL+5,`… ×${fmt(R.su)} SUs`,"end");
+    o+=label(padL,yS-18,plane?`Rail planes: ${Rr} × ${R.spg} spines = ${fmt(R.spines)}${nR<Rr?" (showing "+nR+" rails)":""}`:`Spines ×${fmt(R.spines)} · full mesh to all ${fmt(R.leafs)} leafs`);
+    o+=label(padL,yV+28,narrow?`${R.hpl} servers/SU × ${Rr} NICs`:`${R.hpl} servers per SU, each with ${Rr} NICs (one per rail leaf)`);
+  }else if(R.t===2){
     const yS=H*.22,yL=H*.6,yH=H*.86;
     const nL=Math.max(1,Math.min(R.leafs,narrow?8:16)),nS=Math.max(1,Math.min(R.spines,narrow?6:12));
     const xL=spread(nL,padL+20,W-padR-20),xS=spread(nS,padL+40,W-padR-40);
@@ -800,7 +883,7 @@ function draw(){
     o+=label(W/2,(yS+yL)/2+5,"…","middle");
     o+=label(padL,yX-16,`Super-spines: ${R.planes} planes × ${R.spPlane} = ${fmt(R.supers)} · ${R.xSpeed}G`);
     o+=label(padL,yS-18,`Spines: ${R.spp} per pod · ${R.upSpeed}G down / ${R.spUSpeed}G up`);
-    o+=label(padL,yH+20,`${fmt(R.pods)} pods × ${R.lpp} leafs × ${R.hpl} hosts`);
+    o+=label(padL,yH+20,`${fmt(R.pods)} pods × ${R.lpp} leafs × ${R.hpl} hosts${R.rail&&R.rail.plane?` · ×${R.rail.R} rail planes`:""}`);
     if(!narrow)o+=label(W-padR,yH+20,"pink: cross-pod path","end");
   }
   svg.innerHTML=o;
@@ -808,11 +891,13 @@ function draw(){
 const ro=new ResizeObserver(draw);ro.observe(svg);
 
 document.querySelector(".ctl").addEventListener("input",e=>{if(e.target.matches("input,select")){fromForm();render()}});
+$("fab").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.fab=b.dataset.f;toForm();render()});
+$("rmode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.rmode=b.dataset.r;toForm();render()});
 $("tiers").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.t=+b.dataset.t;toForm();render()});
 $("presets").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;S={...S,...PRESETS[b.dataset.i].c};toForm();render()});
 $("reset").addEventListener("click",()=>{S={...DEF};toForm();render()});
 $("copy").addEventListener("click",async()=>{
-  const t=[`Clos Encounters: ${R.t}-tier`,
+  const t=[`Clos Encounters: ${R.t}-tier ${R.rail?`rail-optimized (${R.rail.plane?"rail planes":"full-mesh spines"}, ${R.rail.R} rails): ${fmt(R.su)} SUs, ${fmt(R.servers)} servers, ${fmt(R.hosts)} GPUs`:"Clos"}`,
     `Leaf: ${S.ldp}×${S.lds}G down (${S.lbh}×) + ${S.lup}×${S.lus}G up (${S.lbu}×) → ${R.hpl}×${R.hostSpeed}G hosts, ${R.upL}×${R.upSpeed}G uplinks`,
     `Spine: ${S.sdp}×${S.sds}G down (${S.sbd}×)${R.t===3?` + ${S.sup}×${S.sus}G up (${S.sbu}×); super-spine ${S.xp}×${S.xs}G (${S.xb}×)`:""}`,
     `Max hosts: ${fmt(R.hosts)} × ${R.hostSpeed}G = ${bw(R.hostBW)} · leaf oversub ${fmtR(R.os)}:1`,
